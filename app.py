@@ -280,13 +280,16 @@ if page == "Patient Overview":
         st.plotly_chart(fig1, use_container_width=True)
 
     with right:
-        st.markdown("**Stress distribution across disorder groups**")
-        fig2 = px.violin(df, x="Sleep_Disorder", y="Stress_Score",
-                         color="Sleep_Disorder", color_discrete_map=PALETTE,
-                         box=True, points=False,
-                         labels={"Sleep_Disorder": "", "Stress_Score": "Stress score (1–10)"})
+        st.markdown("**Stress levels across disorder groups**")
+        fig2 = px.box(df, x="Sleep_Disorder", y="Stress_Score",
+                      color="Sleep_Disorder", color_discrete_map=PALETTE,
+                      labels={"Sleep_Disorder": "", "Stress_Score": "Stress score (1–10)"},
+                      category_orders={"Sleep_Disorder": ALL_CATS})
         polish(fig2)
         fig2.update_layout(showlegend=False, xaxis_tickangle=-18)
+        fig2.update_traces(line_color="#374151", fillcolor=None,
+                           marker=dict(size=3, opacity=0.35),
+                           boxmean="sd")
         st.plotly_chart(fig2, use_container_width=True)
 
     # ── Chart row 2: conflict grouped bar (full width) ─────────────────────────
@@ -318,10 +321,12 @@ if page == "Patient Overview":
         fig4 = px.box(df[df["Sleep_Disorder"] != "No Disorder"],
                       x="Sleep_Disorder", y="Age",
                       color="Sleep_Disorder", color_discrete_map=PALETTE,
-                      notched=True,
                       labels={"Sleep_Disorder": "", "Age": "Age (years)"})
         polish(fig4)
         fig4.update_layout(showlegend=False, xaxis_tickangle=-18)
+        fig4.update_traces(line_color="#374151",
+                           marker=dict(size=3, opacity=0.35),
+                           boxmean="sd")
         st.plotly_chart(fig4, use_container_width=True)
 
     with right2:
@@ -559,10 +564,11 @@ elif page == "Risk Predictor":
             "Chronic_Pain":      int(pain_in    == "Yes"),
         }])
 
-        prob     = model.predict_proba(inp)[0][1]
-        risk_pct = round(prob * 100, 1)
-        color    = "#16A34A" if risk_pct < 30 else ("#D97706" if risk_pct < 60 else "#DC2626")
-        label    = "Low Risk" if risk_pct < 30 else ("Moderate Risk" if risk_pct < 60 else "High Risk")
+        prob         = float(model.predict_proba(inp)[0][1])
+        risk_pct     = prob * 100
+        risk_display = f"{risk_pct:.1f}"
+        color        = "#16A34A" if risk_pct < 30 else ("#D97706" if risk_pct < 60 else "#DC2626")
+        label        = "Low Risk" if risk_pct < 30 else ("Moderate Risk" if risk_pct < 60 else "High Risk")
 
         st.divider()
         res_col, shap_col = st.columns([1, 2.2])
@@ -570,7 +576,7 @@ elif page == "Risk Predictor":
         with res_col:
             st.markdown(f"""
             <div class='risk-card' style='border: 2px solid {color}; background:#FAFAF8;'>
-                <div style='font-size:2.8rem; font-weight:700; color:{color};'>{risk_pct}%</div>
+                <div style='font-size:2.8rem; font-weight:700; color:{color};'>{risk_display}%</div>
                 <div style='font-size:1rem; font-weight:600; color:{color}; margin-top:0.2rem;'>{label}</div>
                 <div style='font-size:0.78rem; color:#78716C; margin-top:0.6rem; line-height:1.5;'>
                     Estimated probability of a sleep disorder being present based on this profile.
