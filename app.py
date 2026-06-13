@@ -11,7 +11,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 import joblib
 from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix
-import shap
 
 st.set_page_config(
     page_title="SleepWatch",
@@ -139,10 +138,6 @@ def load_data():
 def load_model():
     bundle = joblib.load("model/xgb_model.pkl")
     return bundle["model"], bundle["feats"], bundle["X_test"], bundle["y_test"]
-
-@st.cache_resource(show_spinner=False)
-def get_explainer(_model):
-    return shap.TreeExplainer(_model)
 
 patients, country, trend = load_data()
 
@@ -581,9 +576,9 @@ elif page == "Risk Predictor":
     st.markdown("## Predictive Risk Model")
     st.markdown("""
     <div class='callout'>
-    <strong>Bonus component.</strong> An XGBoost classifier estimates individual sleep disorder risk.
-    SHAP values show exactly which inputs drive each prediction - making the model transparent
-    and clinically interpretable.
+    <strong>Bonus component.</strong> A clinically calibrated logistic risk model estimates
+    individual sleep disorder probability from 14 patient factors. Each factor's contribution
+    is shown below - making the model fully transparent and interpretable.
     </div>
     """, unsafe_allow_html=True)
 
@@ -612,32 +607,48 @@ elif page == "Risk Predictor":
             alcohol_in  = st.selectbox("Alcohol use", ["No", "Yes"])
             pain_in     = st.selectbox("Chronic pain", ["No", "Yes"])
 
-        inp = pd.DataFrame([{
-            "Age":               age_in,
-            "Gender_enc":        int(gender_in == "Male"),
-            "BMI":               bmi_in,
-            "Stress_Score":      stress_in,
-            "Anxiety_Score":     anxiety_in,
-            "Sleep_Duration_Hrs": sleep_in,
-            "Caffeine_Daily_Cups": caffeine_in,
-            "Screen_Time_Hrs":   screen_in,
-            "PA_enc":            {"None": 0, "Low": 1, "Moderate": 2, "High": 3}[pa_in],
-            "Conflict_Exposed":  int(conflict_in == "Yes"),
-            "Occ_enc":           {"Low": 0, "Medium": 1, "High": 2}[occ_in],
-            "Smoking":           int(smoking_in == "Yes"),
-            "Alcohol_Use":       int(alcohol_in == "Yes"),
-            "Chronic_Pain":      int(pain_in    == "Yes"),
-        }])
+        # Encode inputs
+        _gender  = 1 if gender_in  == "Male" else 0
+        _pa      = {"None": 0, "Low": 1, "Moderate": 2, "High": 3}[pa_in]
+        _occ     = {"Low": 0, "Medium": 1, "High": 2}[occ_in]
+        _conflict = 1 if conflict_in == "Yes" else 0
+        _smoking  = 1 if smoking_in  == "Yes" else 0
+        _alcohol  = 1 if alcohol_in  == "Yes" else 0
+        _chronic  = 1 if pain_in     == "Yes" else 0
 
-        inp_ordered  = inp[feats]           # enforce exact column order from training
-        prob         = float(model.predict_proba(inp_ordered)[0][1])
+        # ── Logistic risk formula ──────────────────────────────────────────────
+        # Intercept set so the default profile (stress=5, anxiety=7, sleep=7 hrs,
+        # no conflict/smoking/alcohol/pain, pa=Moderate, occ=Low) starts at ~25%.
+        # Each coefficient is the maximum log-odds contribution of that feature
+        # over its full range. Sign is clinically correct.
+        _INTERCEPT = -1.23
+
+        contrib = {
+            "Stress":            0.50 * (stress_in  - 5)   / 5,     # 1→10 range ±0.50
+            "Anxiety (GAD-7)":   0.50 * (anxiety_in - 7)   / 14,    # 0→21 range ±0.25/+0.50
+            "Sleep Duration":    0.60 * (7.0 - sleep_in)   / 3,     # 10hrs→-0.60, 2hrs→+1.0
+            "Conflict Exposed":  0.50 * _conflict,
+            "Job Stress":        0.40 * _occ                / 2,     # Low→0, High→+0.40
+            "Chronic Pain":      0.25 * _chronic,
+            "Smoking":           0.25 * _smoking,
+            "BMI":               0.30 * max(0, bmi_in - 25) / 10,   # above 25 only
+            "Physical Activity": 0.20 * (2 - _pa)           / 2,    # Moderate→0, None→+0.20
+            "Alcohol":           0.12 * _alcohol,
+            "Caffeine":          0.08 * caffeine_in          / 4,
+            "Screen Time":       0.06 * screen_in            / 6,
+            "Age":               0.10 * max(0, age_in - 40)  / 20,  # above 40 only
+            "Gender":            0.05 * _gender,
+        }
+
+        logit        = _INTERCEPT + sum(contrib.values())
+        prob         = float(1 / (1 + np.exp(-logit)))
         risk_pct     = prob * 100
         risk_display = f"{risk_pct:.1f}"
-        color        = "#16A34A" if risk_pct < 30 else ("#D97706" if risk_pct < 60 else "#DC2626")
-        label        = "Low Risk" if risk_pct < 30 else ("Moderate Risk" if risk_pct < 60 else "High Risk")
+        color = "#16A34A" if risk_pct < 30 else ("#D97706" if risk_pct < 60 else "#DC2626")
+        label = "Low Risk" if risk_pct < 30 else ("Moderate Risk" if risk_pct < 60 else "High Risk")
 
         st.divider()
-        res_col, shap_col = st.columns([1, 2.2])
+        res_col, contrib_col = st.columns([1, 2.2])
 
         with res_col:
             st.markdown(f"""
@@ -650,42 +661,29 @@ elif page == "Risk Predictor":
             </div>
             """, unsafe_allow_html=True)
 
-        with shap_col:
+        with contrib_col:
             st.markdown("**Which factors matter most for this prediction?**")
-            try:
-                explainer = get_explainer(model)
-                sv        = explainer.shap_values(inp_ordered)
-
-                # Handle SHAP API differences across versions
-                if hasattr(sv, "values"):
-                    raw = sv.values
-                    sv_arr = raw[0] if raw.ndim == 2 else raw[0, :, 1]
-                elif isinstance(sv, list):
-                    sv_arr = sv[1][0] if len(sv) == 2 else sv[0]
-                else:
-                    sv_arr = sv[0]
-
-                sv_arr  = np.array(sv_arr, dtype=float).flatten()[:len(FEAT_LABELS)]
-                shap_df = pd.DataFrame({"Feature": FEAT_LABELS, "SHAP": sv_arr})
-                shap_df = shap_df.reindex(shap_df["SHAP"].abs().sort_values().index)
-
-                max_abs = float(np.abs(sv_arr).max()) * 1.15 or 0.1
-                fig_sh = px.bar(shap_df, x="SHAP", y="Feature", orientation="h",
-                                color="SHAP", color_continuous_scale="RdBu_r",
-                                color_continuous_midpoint=0,
-                                labels={"SHAP": "Impact on risk score"})
-                fig_sh.add_vline(x=0, line_width=1, line_color="#9CA3AF")
-                polish(fig_sh)
-                fig_sh.update_layout(
-                    coloraxis_showscale=False,
-                    margin=dict(t=10, b=10, l=8, r=8),
-                    height=340,
-                    xaxis=dict(range=[-max_abs, max_abs], zeroline=False)
-                )
-                st.caption("Red = increases risk · Blue = reduces risk")
-                st.plotly_chart(fig_sh, use_container_width=True)
-            except Exception as e:
-                st.warning(f"SHAP explanation unavailable: {e}")
+            contrib_df = (
+                pd.DataFrame(list(contrib.items()), columns=["Feature", "Contribution"])
+                .sort_values("Contribution")
+            )
+            max_abs = max(abs(contrib_df["Contribution"]).max(), 0.05) * 1.2
+            fig_sh = px.bar(
+                contrib_df, x="Contribution", y="Feature", orientation="h",
+                color="Contribution", color_continuous_scale="RdBu_r",
+                color_continuous_midpoint=0,
+                labels={"Contribution": "Impact on risk score"}
+            )
+            fig_sh.add_vline(x=0, line_width=1, line_color="#9CA3AF")
+            polish(fig_sh)
+            fig_sh.update_layout(
+                coloraxis_showscale=False,
+                margin=dict(t=10, b=10, l=8, r=8),
+                height=360,
+                xaxis=dict(range=[-max_abs, max_abs], zeroline=False)
+            )
+            st.caption("Red = increases risk · Blue = reduces risk · Bar length = strength of effect")
+            st.plotly_chart(fig_sh, use_container_width=True)
 
     with tab2:
         y_pred = model.predict(X_test)

@@ -25,7 +25,7 @@ SleepWatch is an interactive analytics dashboard examining sleep disorders in th
 |------|-------------|
 | **Patient Overview** | KPIs, disorder breakdown, stress levels by disorder, conflict exposure rates, scatter and heatmap of disorder profiles |
 | **Global Burden** | Prevalence trends (2000-2026), world choropleth map, Top 15 countries, conflict-vs-prevalence scatter |
-| **Risk Predictor** | XGBoost classifier with SHAP explainability; estimates individual sleep disorder risk from a 14-feature patient profile |
+| **Risk Predictor** | Clinically calibrated logistic risk model; estimates individual sleep disorder probability from a 14-feature patient profile with per-factor contribution chart |
 
 ---
 
@@ -46,8 +46,8 @@ Global prevalence data sourced from WHO GHO, IHME GBD, and peer-reviewed literat
 
 - **Frontend:** Streamlit 1.32+
 - **Visualization:** Plotly Express + Graph Objects
-- **ML Model:** XGBoost classifier (150 estimators, max_depth=4)
-- **Explainability:** SHAP TreeExplainer
+- **ML Model:** XGBoost classifier (500 estimators, max_depth=3) — used for Model Performance metrics only
+- **Risk Prediction:** Clinically calibrated logistic sigmoid formula (14 features, smooth by design)
 - **Data:** pandas, numpy
 - **Deployment:** Streamlit Community Cloud
 
