@@ -1,5 +1,5 @@
 ﻿"""
-SomniQ Analytics: Clinical Sleep Disorder Analytics Platform
+SleepWatch: Clinical Sleep Disorder Analytics Platform
 MSBA 382 - Healthcare Analytics | Individual Project
 AUB Olayan School of Business, Summer 2026
 """
@@ -14,7 +14,7 @@ from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix
 import shap
 
 st.set_page_config(
-    page_title="SomniQ Analytics",
+    page_title="SleepWatch",
     page_icon="🌙",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -105,9 +105,9 @@ def check_password():
         <div style='text-align:center; padding:2.2rem 2rem 1.8rem;
                     background:#FAFAF8; border-radius:16px; border:1px solid #E8E3DA;'>
             <div style='font-size:2.8rem;'>🌙</div>
-            <div style='font-size:1.5rem; font-weight:600; color:#1B3A5C; margin:0.4rem 0 0;'>SomniQ Analytics</div>
+            <div style='font-size:1.5rem; font-weight:600; color:#1B3A5C; margin:0.4rem 0 0;'>SleepWatch</div>
             <div style='color:#8C8680; font-size:0.84rem; margin:0.1rem 0 1.4rem;'>
-                Clinical Sleep Disorder Analytics &nbsp;·&nbsp; AUB
+                Clinical Sleep Analytics &nbsp;·&nbsp; AUB
             </div>
         </div>""", unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
@@ -179,7 +179,7 @@ with st.sidebar:
     st.markdown("""
     <div style='padding:0.6rem 0 0.2rem; text-align:center;'>
         <span style='font-size:1.8rem;'>🌙</span>
-        <div style='font-size:1rem; font-weight:600; color:#1B3A5C; margin-top:0.2rem;'>SomniQ Analytics</div>
+        <div style='font-size:1rem; font-weight:600; color:#1B3A5C; margin-top:0.2rem;'>SleepWatch</div>
         <div style='font-size:0.68rem; color:#A8A29E; margin-top:0.1rem;'>
             Clinical Sleep Analytics · AUB
         </div>
