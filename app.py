@@ -132,6 +132,10 @@ def load_model():
     bundle = joblib.load("model/xgb_model.pkl")
     return bundle["model"], bundle["feats"], bundle["X_test"], bundle["y_test"]
 
+@st.cache_resource(show_spinner=False)
+def get_explainer(_model):
+    return shap.TreeExplainer(_model)
+
 patients, country, trend = load_data()
 
 DISORDERS = ["Insomnia", "Sleep Apnea", "Hypersomnia", "Narcolepsy", "Restless Leg Syndrome"]
@@ -554,7 +558,8 @@ elif page == "Risk Predictor":
             "Chronic_Pain":      int(pain_in    == "Yes"),
         }])
 
-        prob         = float(model.predict_proba(inp)[0][1])
+        inp_ordered  = inp[feats]           # enforce exact column order from training
+        prob         = float(model.predict_proba(inp_ordered)[0][1])
         risk_pct     = prob * 100
         risk_display = f"{risk_pct:.1f}"
         color        = "#16A34A" if risk_pct < 30 else ("#D97706" if risk_pct < 60 else "#DC2626")
@@ -577,26 +582,36 @@ elif page == "Risk Predictor":
         with shap_col:
             st.markdown("**Which factors matter most for this prediction?**")
             try:
-                explainer = shap.TreeExplainer(model)
-                sv        = explainer.shap_values(inp)
+                explainer = get_explainer(model)
+                sv        = explainer.shap_values(inp_ordered)
+
+                # Handle SHAP API differences across versions
                 if hasattr(sv, "values"):
-                    sv_arr = sv.values[0] if sv.values.ndim == 2 else sv.values[0, :, 1]
+                    raw = sv.values
+                    sv_arr = raw[0] if raw.ndim == 2 else raw[0, :, 1]
                 elif isinstance(sv, list):
                     sv_arr = sv[1][0] if len(sv) == 2 else sv[0]
                 else:
                     sv_arr = sv[0]
 
+                sv_arr  = np.array(sv_arr, dtype=float).flatten()[:len(FEAT_LABELS)]
                 shap_df = pd.DataFrame({"Feature": FEAT_LABELS, "SHAP": sv_arr})
                 shap_df = shap_df.reindex(shap_df["SHAP"].abs().sort_values().index)
 
+                max_abs = float(np.abs(sv_arr).max()) * 1.15 or 0.1
                 fig_sh = px.bar(shap_df, x="SHAP", y="Feature", orientation="h",
                                 color="SHAP", color_continuous_scale="RdBu_r",
                                 color_continuous_midpoint=0,
                                 labels={"SHAP": "Impact on risk score"})
+                fig_sh.add_vline(x=0, line_width=1, line_color="#9CA3AF")
                 polish(fig_sh)
-                fig_sh.update_layout(coloraxis_showscale=False,
-                                     margin=dict(t=10, b=10, l=8, r=8))
-                st.caption("Red bars push risk up · Blue bars push risk down")
+                fig_sh.update_layout(
+                    coloraxis_showscale=False,
+                    margin=dict(t=10, b=10, l=8, r=8),
+                    height=340,
+                    xaxis=dict(range=[-max_abs, max_abs], zeroline=False)
+                )
+                st.caption("Red = increases risk · Blue = reduces risk")
                 st.plotly_chart(fig_sh, use_container_width=True)
             except Exception as e:
                 st.warning(f"SHAP explanation unavailable: {e}")
