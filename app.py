@@ -513,7 +513,7 @@ elif page == "🤖 Risk Predictor":
     import xgboost as xgb
     import shap
 
-    @st.cache_resource(show_spinner="Training XGBoost model on 13,401 records…")
+    @st.cache_resource(show_spinner="Training XGBoost model…")
     def train_model():
         df_ml = patients.copy()
         df_ml["Target"] = (df_ml["Sleep_Disorder"] != "No Disorder").astype(int)
@@ -529,13 +529,18 @@ elif page == "🤖 Risk Predictor":
                     "PA_enc", "Conflict_Exposed", "Occ_enc",
                     "Smoking", "Alcohol_Use", "Chronic_Pain"]
 
+        # Stratified sample for fast training on cloud
+        df_ml = df_ml.groupby("Target", group_keys=False).apply(
+            lambda x: x.sample(min(len(x), 2000), random_state=42)
+        )
+
         X = df_ml[features]
         y = df_ml["Target"]
         X_train, X_test, y_train, y_test = train_test_split(
             X, y, test_size=0.2, random_state=42, stratify=y
         )
         model = xgb.XGBClassifier(
-            n_estimators=300, max_depth=5, learning_rate=0.06,
+            n_estimators=150, max_depth=4, learning_rate=0.1,
             subsample=0.8, colsample_bytree=0.8,
             eval_metric="logloss", random_state=42,
             scale_pos_weight=(y_train == 0).sum() / (y_train == 1).sum()
