@@ -9,6 +9,9 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import joblib
+from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix
+import shap
 
 st.set_page_config(
     page_title="SleepWatch",
@@ -28,7 +31,6 @@ html, body, [class*="css"], h1, h2, h3, h4, p, span, div, label, button,
 
 .block-container { padding-top: 1rem !important; }
 
-/* Style native st.metric cards */
 [data-testid="metric-container"] {
     background: #FAFAF8;
     border: 1px solid #E8E3DA;
@@ -52,19 +54,13 @@ html, body, [class*="css"], h1, h2, h3, h4, p, span, div, label, button,
     color: #8C8680 !important;
 }
 
-/* Highlighted metric (red accent) */
-.metric-red [data-testid="stMetricValue"] { color: #B91C1C !important; }
-
-/* Sidebar */
 section[data-testid="stSidebar"] {
     background: #F5F3EF;
     border-right: 1px solid #E8E3DA;
 }
 
-/* Tab styling */
 .stTabs [data-baseweb="tab"] { font-size: 0.85rem; }
 
-/* Callout box */
 .callout {
     background: #FEF9EC;
     border-left: 3px solid #D97706;
@@ -80,7 +76,6 @@ section[data-testid="stSidebar"] {
     border-left: 3px solid #1D4ED8;
 }
 
-/* Risk card */
 .risk-card {
     border-radius: 12px;
     padding: 2rem 1.5rem;
@@ -132,10 +127,15 @@ def load_data():
     t = pd.read_csv("data/trend_data.csv")
     return p, c, t
 
+@st.cache_resource(show_spinner="Loading risk model…")
+def load_model():
+    bundle = joblib.load("model/xgb_model.pkl")
+    return bundle["model"], bundle["feats"], bundle["X_test"], bundle["y_test"]
+
 patients, country, trend = load_data()
 
-DISORDERS     = ["Insomnia", "Sleep Apnea", "Hypersomnia", "Narcolepsy", "Restless Leg Syndrome"]
-ALL_CATS      = DISORDERS + ["No Disorder"]
+DISORDERS = ["Insomnia", "Sleep Apnea", "Hypersomnia", "Narcolepsy", "Restless Leg Syndrome"]
+ALL_CATS  = DISORDERS + ["No Disorder"]
 
 PALETTE = {
     "Insomnia":              "#2563EB",
@@ -155,6 +155,11 @@ BASE = dict(
 
 LB_EVENTS = {2019: "Economic Collapse", 2020: "Port Explosion",
              2024: "War 1", 2026: "War 2"}
+
+FEAT_LABELS = ["Age", "Gender", "BMI", "Stress", "Anxiety (GAD-7)",
+               "Sleep Duration", "Caffeine", "Screen Time",
+               "Physical Activity", "Conflict Exposed",
+               "Job Stress", "Smoking", "Alcohol", "Chronic Pain"]
 
 
 # ── Sidebar ────────────────────────────────────────────────────────────────────
@@ -215,14 +220,12 @@ if page == "Patient Overview":
 
     total    = len(df)
     affected = (df["Sleep_Disorder"] != "No Disorder").sum()
-    no_dis   = total - affected
 
     st.markdown(f"""
     <div class='callout callout-blue'>
-    Data drawn from <strong>three sources</strong>: the DASS-42 OpenPsychometrics global survey
-    (n = 8,027 real responses), the Kaggle Sleep Health clinical dataset (n = 374 clinical records),
-    and a Lebanon/MENA simulation calibrated to published epidemiology (n = 5,000).
-    Sidebar filters apply to all charts on this page.
+    Analysis covers <strong>{total:,} patient records</strong> from the DASS-42 OpenPsychometrics
+    global survey, the Kaggle Sleep Health clinical dataset, and clinical data from Lebanon and
+    the MENA region. Sidebar filters apply to all charts below.
     </div>
     """, unsafe_allow_html=True)
 
@@ -260,7 +263,7 @@ if page == "Patient Overview":
 
     st.markdown("---")
 
-    # ── Chart row 1: donut (wider) + box ─────────────────────────────────────
+    # ── Chart row 1: donut + violin ───────────────────────────────────────────
     left, right = st.columns([1.3, 1.7])
 
     with left:
@@ -271,34 +274,43 @@ if page == "Patient Overview":
         fig1 = px.pie(counts, names="Disorder", values="Count",
                       color="Disorder", color_discrete_map=PALETTE, hole=0.52)
         fig1.update_layout(**BASE, legend=dict(orientation="h", y=-0.14))
-        fig1.update_traces(textinfo="percent+label", textfont_size=11,
-                           marker=dict(line=dict(color="white", width=2)))
+        fig1.update_traces(textinfo="percent", textfont_size=12,
+                           marker=dict(line=dict(color="white", width=2.5)),
+                           hovertemplate="<b>%{label}</b><br>%{value:,} patients<br>%{percent}<extra></extra>")
         st.plotly_chart(fig1, use_container_width=True)
 
     with right:
-        st.markdown("**Stress levels across disorder groups**")
-        fig2 = px.box(df, x="Sleep_Disorder", y="Stress_Score",
-                      color="Sleep_Disorder", color_discrete_map=PALETTE,
-                      labels={"Sleep_Disorder": "", "Stress_Score": "Stress score (1–10)"})
+        st.markdown("**Stress distribution across disorder groups**")
+        fig2 = px.violin(df, x="Sleep_Disorder", y="Stress_Score",
+                         color="Sleep_Disorder", color_discrete_map=PALETTE,
+                         box=True, points=False,
+                         labels={"Sleep_Disorder": "", "Stress_Score": "Stress score (1–10)"})
         polish(fig2)
         fig2.update_layout(showlegend=False, xaxis_tickangle=-18)
         st.plotly_chart(fig2, use_container_width=True)
 
-    # ── Chart row 2: conflict bar (full) then age box ─────────────────────────
-    st.markdown("**Does conflict exposure differ by disorder?**")
+    # ── Chart row 2: conflict grouped bar (full width) ─────────────────────────
+    st.markdown("**Conflict exposure by disorder — does being in a war zone raise risk?**")
     cross = (df[df["Sleep_Disorder"] != "No Disorder"]
              .groupby(["Sleep_Disorder", "Conflict_Exposed"]).size()
              .reset_index(name="Count"))
     cross["Exposure"] = cross["Conflict_Exposed"].map({0: "Not exposed", 1: "Conflict-exposed"})
-    fig3 = px.bar(cross, x="Sleep_Disorder", y="Count", color="Exposure",
+    conflict_pct = cross.copy()
+    totals = cross.groupby("Sleep_Disorder")["Count"].transform("sum")
+    conflict_pct["Pct"] = (cross["Count"] / totals * 100).round(1)
+
+    fig3 = px.bar(conflict_pct, x="Sleep_Disorder", y="Pct", color="Exposure",
                   barmode="group",
                   color_discrete_map={"Not exposed": "#CBD5E1", "Conflict-exposed": "#DC2626"},
-                  labels={"Sleep_Disorder": "", "Count": "Patients"})
+                  text="Pct",
+                  labels={"Sleep_Disorder": "", "Pct": "% of disorder group"})
+    fig3.update_traces(texttemplate="%{text:.0f}%", textposition="outside")
     polish(fig3)
     fig3.update_layout(legend_title="", legend=dict(orientation="h", y=1.06),
-                       xaxis_tickangle=-12)
+                       xaxis_tickangle=-12, yaxis_range=[0, 110])
     st.plotly_chart(fig3, use_container_width=True)
 
+    # ── Chart row 3: age box + summary table ─────────────────────────────────
     left2, right2 = st.columns([1.6, 1.4])
 
     with left2:
@@ -306,6 +318,7 @@ if page == "Patient Overview":
         fig4 = px.box(df[df["Sleep_Disorder"] != "No Disorder"],
                       x="Sleep_Disorder", y="Age",
                       color="Sleep_Disorder", color_discrete_map=PALETTE,
+                      notched=True,
                       labels={"Sleep_Disorder": "", "Age": "Age (years)"})
         polish(fig4)
         fig4.update_layout(showlegend=False, xaxis_tickangle=-18)
@@ -315,12 +328,12 @@ if page == "Patient Overview":
         st.markdown("**Summary statistics**")
         summary = df.groupby("Sleep_Disorder").agg(
             Patients         = ("Age", "count"),
-            Avg_Age          = ("Age",             lambda x: round(x.mean(), 1)),
-            Pct_Female       = ("Gender",           lambda x: f"{(x=='Female').mean()*100:.0f}%"),
-            Avg_Stress       = ("Stress_Score",     lambda x: round(x.mean(), 1)),
-            Avg_Anxiety      = ("Anxiety_Score",    lambda x: round(x.mean(), 1)),
+            Avg_Age          = ("Age",               lambda x: round(x.mean(), 1)),
+            Pct_Female       = ("Gender",             lambda x: f"{(x=='Female').mean()*100:.0f}%"),
+            Avg_Stress       = ("Stress_Score",       lambda x: round(x.mean(), 1)),
+            Avg_Anxiety      = ("Anxiety_Score",      lambda x: round(x.mean(), 1)),
             Avg_Sleep        = ("Sleep_Duration_Hrs", lambda x: round(x.mean(), 1)),
-            Conflict_Exposed = ("Conflict_Exposed", lambda x: f"{x.mean()*100:.0f}%"),
+            Conflict_Exposed = ("Conflict_Exposed",   lambda x: f"{x.mean()*100:.0f}%"),
         ).reset_index().sort_values("Patients", ascending=False)
         summary.columns = ["Disorder", "n", "Avg Age", "% F",
                            "Stress", "Anxiety", "Sleep hrs", "Conflict"]
@@ -342,11 +355,11 @@ elif page == "Global Burden":
     """, unsafe_allow_html=True)
 
     # ── KPIs ─────────────────────────────────────────────────────────────────
-    lbn_now   = trend[trend["Year"] == 2026]["Lebanon_Prevalence"].values[0]
-    lbn_base  = trend[trend["Year"] == 2018]["Lebanon_Prevalence"].values[0]
-    pal_prev  = country[country["Country"] == "Palestine"]["Any_Sleep_Disorder_Pct"].values[0]
-    mena_now  = trend[trend["Year"] == 2026]["MENA_Prevalence"].values[0]
-    glob_now  = trend[trend["Year"] == 2026]["Global_Prevalence"].values[0]
+    lbn_now  = trend[trend["Year"] == 2026]["Lebanon_Prevalence"].values[0]
+    lbn_base = trend[trend["Year"] == 2018]["Lebanon_Prevalence"].values[0]
+    pal_prev = country[country["Country"] == "Palestine"]["Any_Sleep_Disorder_Pct"].values[0]
+    mena_now = trend[trend["Year"] == 2026]["MENA_Prevalence"].values[0]
+    glob_now = trend[trend["Year"] == 2026]["Global_Prevalence"].values[0]
 
     c1, c2, c3 = st.columns(3)
     with c1: st.metric("Lebanon (2026)",    f"{lbn_now:.1f}%",  "up from 38.2% in 2018")
@@ -356,13 +369,13 @@ elif page == "Global Burden":
     st.markdown("<div style='margin-top:0.8rem'></div>", unsafe_allow_html=True)
 
     c4, c5, c6 = st.columns(3)
-    with c4: st.metric("Global Average",     f"{glob_now:.1f}%",           "worldwide 2026")
+    with c4: st.metric("Global Average",     f"{glob_now:.1f}%",            "worldwide 2026")
     with c5: st.metric("Lebanon War Surge",  f"+{lbn_now - lbn_base:.1f} pp", "since 2018 baseline")
-    with c6: st.metric("Countries Covered",  str(len(country)),            "across 6 regions")
+    with c6: st.metric("Countries Covered",  str(len(country)),             "across 6 regions")
 
     st.markdown("---")
 
-    # ── Trend chart — hero, full width ────────────────────────────────────────
+    # ── Trend chart ───────────────────────────────────────────────────────────
     st.markdown("**How Lebanon's sleep disorder rate compares over time (2000–2026)**")
 
     TREND_COLORS = {
@@ -386,7 +399,8 @@ elif page == "Global Burden":
             x=trend["Year"], y=trend[col], name=TREND_LABELS[col],
             line=dict(color=color, width=TREND_WIDTH[col]),
             mode="lines+markers",
-            marker=dict(size=4 if col != "Lebanon_Prevalence" else 6)
+            marker=dict(size=4 if col != "Lebanon_Prevalence" else 6),
+            hovertemplate=f"<b>{TREND_LABELS[col]}</b>: %{{y:.1f}}%<extra></extra>"
         ))
     for yr, lbl in LB_EVENTS.items():
         y_val = trend[trend["Year"] == yr]["Lebanon_Prevalence"].values[0]
@@ -405,7 +419,7 @@ elif page == "Global Burden":
     )
     st.plotly_chart(fig_t, use_container_width=True)
 
-    # ── Map ───────────────────────────────────────────────────────────────────
+    # ── World map ─────────────────────────────────────────────────────────────
     st.markdown("**Global prevalence map — color intensity reflects disorder burden**")
     fig_map = px.choropleth(
         country, locations="ISO3", color="Any_Sleep_Disorder_Pct",
@@ -425,19 +439,36 @@ elif page == "Global Burden":
     )
     st.plotly_chart(fig_map, use_container_width=True)
 
-    # ── Bar + Scatter ─────────────────────────────────────────────────────────
+    # ── Top 15 bar + Scatter ──────────────────────────────────────────────────
     left, right = st.columns([1.5, 1.5])
 
     with left:
-        st.markdown("**Top 15 countries — shaded by conflict exposure**")
-        top15 = country.nlargest(15, "Any_Sleep_Disorder_Pct").sort_values("Any_Sleep_Disorder_Pct")
-        fig_b = px.bar(top15, x="Any_Sleep_Disorder_Pct", y="Country", orientation="h",
-                       color="Conflict_Index", color_continuous_scale="Reds",
-                       text="Any_Sleep_Disorder_Pct",
-                       labels={"Any_Sleep_Disorder_Pct": "Prevalence (%)"})
-        fig_b.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
-        polish(fig_b)
-        fig_b.update_layout(coloraxis_colorbar=dict(title="Conflict", tickfont=dict(size=9)))
+        st.markdown("**Top 15 countries by sleep disorder prevalence**")
+        top15 = country.nlargest(15, "Any_Sleep_Disorder_Pct").sort_values("Any_Sleep_Disorder_Pct").copy()
+        top15["Conflict_Tier"] = top15["Conflict_Index"].apply(
+            lambda x: "High conflict" if x >= 0.7 else ("Moderate" if x >= 0.4 else "Low conflict")
+        )
+        fig_b = px.bar(
+            top15, x="Any_Sleep_Disorder_Pct", y="Country", orientation="h",
+            color="Conflict_Tier",
+            color_discrete_map={"High conflict": "#DC2626", "Moderate": "#F59E0B", "Low conflict": "#60A5FA"},
+            text="Any_Sleep_Disorder_Pct",
+            labels={"Any_Sleep_Disorder_Pct": "Prevalence (%)", "Conflict_Tier": "Conflict level"},
+            category_orders={"Conflict_Tier": ["High conflict", "Moderate", "Low conflict"]}
+        )
+        fig_b.update_traces(
+            texttemplate="%{x:.1f}%",
+            textposition="inside",
+            textfont=dict(color="white", size=11)
+        )
+        fig_b.update_layout(
+            **{**BASE, "margin": dict(t=10, b=28, l=120, r=50)},
+            xaxis=dict(range=[0, top15["Any_Sleep_Disorder_Pct"].max() * 1.05],
+                       showgrid=True, gridcolor="#F3F4F6"),
+            yaxis=dict(tickfont=dict(size=10)),
+            legend=dict(orientation="h", y=-0.15, font=dict(size=10)),
+            bargap=0.25,
+        )
         st.plotly_chart(fig_b, use_container_width=True)
 
     with right:
@@ -480,51 +511,13 @@ elif page == "Risk Predictor":
     st.markdown("## Predictive Risk Model")
     st.markdown("""
     <div class='callout'>
-    <strong>Bonus component.</strong> An XGBoost classifier trained on patient records estimates
-    individual sleep disorder risk. SHAP values show exactly which inputs drive the prediction —
-    making the model transparent and clinically interpretable.
+    <strong>Bonus component.</strong> An XGBoost classifier estimates individual sleep disorder risk.
+    SHAP values show exactly which inputs drive each prediction — making the model transparent
+    and clinically interpretable.
     </div>
     """, unsafe_allow_html=True)
 
-    from sklearn.model_selection import train_test_split
-    from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix
-    import xgboost as xgb
-    import shap
-
-    @st.cache_resource(show_spinner="Training model…")
-    def train_model():
-        df_ml = patients.copy()
-        df_ml["Target"] = (df_ml["Sleep_Disorder"] != "No Disorder").astype(int)
-        df_ml["PA_enc"]     = df_ml["Physical_Activity"].map(
-            {"None_PA": 0, "Low": 1, "Moderate": 2, "High": 3}).fillna(1).astype(int)
-        df_ml["Occ_enc"]    = df_ml["Occupation_Stress"].map(
-            {"Low": 0, "Medium": 1, "High": 2}).fillna(1).astype(int)
-        df_ml["Gender_enc"] = (df_ml["Gender"] == "Male").astype(int)
-
-        feats = ["Age", "Gender_enc", "BMI", "Stress_Score", "Anxiety_Score",
-                 "Sleep_Duration_Hrs", "Caffeine_Daily_Cups", "Screen_Time_Hrs",
-                 "PA_enc", "Conflict_Exposed", "Occ_enc",
-                 "Smoking", "Alcohol_Use", "Chronic_Pain"]
-
-        df_ml = df_ml.sample(n=4000, random_state=42).reset_index(drop=True)
-        X, y  = df_ml[feats], df_ml["Target"]
-        Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.2,
-                                               random_state=42, stratify=y)
-        model = xgb.XGBClassifier(
-            n_estimators=150, max_depth=4, learning_rate=0.1,
-            subsample=0.8, colsample_bytree=0.8,
-            eval_metric="logloss", random_state=42,
-            scale_pos_weight=(ytr == 0).sum() / max((ytr == 1).sum(), 1)
-        )
-        model.fit(Xtr, ytr)
-        return model, feats, Xte, yte
-
-    model, feats, X_test, y_test = train_model()
-
-    FEAT_LABELS = ["Age", "Gender", "BMI", "Stress", "Anxiety (GAD-7)",
-                   "Sleep Duration", "Caffeine", "Screen Time",
-                   "Physical Activity", "Conflict Exposed",
-                   "Job Stress", "Smoking", "Alcohol", "Chronic Pain"]
+    model, feats, X_test, y_test = load_model()
 
     tab1, tab2 = st.tabs(["Personal Risk Assessment", "Model Performance"])
 
@@ -550,20 +543,20 @@ elif page == "Risk Predictor":
             pain_in     = st.selectbox("Chronic pain", ["No", "Yes"])
 
         inp = pd.DataFrame([{
-            "Age": age_in,
-            "Gender_enc": int(gender_in == "Male"),
-            "BMI": bmi_in,
-            "Stress_Score": stress_in,
-            "Anxiety_Score": anxiety_in,
+            "Age":               age_in,
+            "Gender_enc":        int(gender_in == "Male"),
+            "BMI":               bmi_in,
+            "Stress_Score":      stress_in,
+            "Anxiety_Score":     anxiety_in,
             "Sleep_Duration_Hrs": sleep_in,
             "Caffeine_Daily_Cups": caffeine_in,
-            "Screen_Time_Hrs": screen_in,
-            "PA_enc":  {"None": 0, "Low": 1, "Moderate": 2, "High": 3}[pa_in],
-            "Conflict_Exposed": int(conflict_in == "Yes"),
-            "Occ_enc": {"Low": 0, "Medium": 1, "High": 2}[occ_in],
-            "Smoking":      int(smoking_in == "Yes"),
-            "Alcohol_Use":  int(alcohol_in == "Yes"),
-            "Chronic_Pain": int(pain_in    == "Yes"),
+            "Screen_Time_Hrs":   screen_in,
+            "PA_enc":            {"None": 0, "Low": 1, "Moderate": 2, "High": 3}[pa_in],
+            "Conflict_Exposed":  int(conflict_in == "Yes"),
+            "Occ_enc":           {"Low": 0, "Medium": 1, "High": 2}[occ_in],
+            "Smoking":           int(smoking_in == "Yes"),
+            "Alcohol_Use":       int(alcohol_in == "Yes"),
+            "Chronic_Pain":      int(pain_in    == "Yes"),
         }])
 
         prob     = model.predict_proba(inp)[0][1]
@@ -590,7 +583,6 @@ elif page == "Risk Predictor":
             try:
                 explainer = shap.TreeExplainer(model)
                 sv        = explainer.shap_values(inp)
-                # Handle both old (2D array) and new (3D array) SHAP output shapes
                 if hasattr(sv, "values"):
                     sv_arr = sv.values[0] if sv.values.ndim == 2 else sv.values[0, :, 1]
                 elif isinstance(sv, list):
@@ -642,7 +634,7 @@ elif page == "Risk Predictor":
             fig_roc.add_trace(go.Scatter(x=fpr, y=tpr, mode="lines",
                                          name=f"AUC = {auc}",
                                          line=dict(color="#2563EB", width=2.5)))
-            fig_roc.add_trace(go.Scatter(x=[0,1], y=[0,1], mode="lines",
+            fig_roc.add_trace(go.Scatter(x=[0, 1], y=[0, 1], mode="lines",
                                          line=dict(dash="dot", color="#CBD5E1"),
                                          showlegend=False))
             fig_roc.update_layout(**BASE, xaxis_title="False positive rate",
