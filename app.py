@@ -1,5 +1,5 @@
 ﻿"""
-SleepWatch: Sleep Disorders in the Context of Stress, Anxiety and Conflict
+SomniQ Analytics: Clinical Sleep Disorder Analytics Platform
 MSBA 382 - Healthcare Analytics | Individual Project
 AUB Olayan School of Business, Summer 2026
 """
@@ -14,7 +14,7 @@ from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix
 import shap
 
 st.set_page_config(
-    page_title="SleepWatch",
+    page_title="SomniQ Analytics",
     page_icon="🌙",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -29,7 +29,7 @@ html, body, [class*="css"], h1, h2, h3, h4, p, span, div, label, button,
     font-family: 'DM Sans', 'Segoe UI', sans-serif !important;
 }
 
-.block-container { padding-top: 1rem !important; }
+.block-container { padding-top: 2rem !important; }
 
 [data-testid="metric-container"] {
     background: #FAFAF8;
@@ -60,6 +60,14 @@ section[data-testid="stSidebar"] {
 }
 
 .stTabs [data-baseweb="tab"] { font-size: 0.85rem; }
+
+/* Hide Streamlit chrome (removes d_double keyboard hint, deploy btn, footer) */
+header[data-testid="stHeader"]         { display: none !important; }
+#MainMenu                               { visibility: hidden !important; }
+footer                                  { visibility: hidden !important; }
+.stDeployButton                         { display: none !important; }
+[data-testid="stAppDeployButton"]       { display: none !important; }
+[data-testid="stKeyboardShortcut"]      { display: none !important; }
 
 .callout {
     background: #FEF9EC;
@@ -97,9 +105,9 @@ def check_password():
         <div style='text-align:center; padding:2.2rem 2rem 1.8rem;
                     background:#FAFAF8; border-radius:16px; border:1px solid #E8E3DA;'>
             <div style='font-size:2.8rem;'>🌙</div>
-            <div style='font-size:1.5rem; font-weight:600; color:#1B3A5C; margin:0.4rem 0 0;'>SleepWatch</div>
+            <div style='font-size:1.5rem; font-weight:600; color:#1B3A5C; margin:0.4rem 0 0;'>SomniQ Analytics</div>
             <div style='color:#8C8680; font-size:0.84rem; margin:0.1rem 0 1.4rem;'>
-                Healthcare Analytics &nbsp;·&nbsp; MSBA 382 &nbsp;·&nbsp; AUB
+                Clinical Sleep Disorder Analytics &nbsp;·&nbsp; AUB
             </div>
         </div>""", unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
@@ -171,9 +179,9 @@ with st.sidebar:
     st.markdown("""
     <div style='padding:0.6rem 0 0.2rem; text-align:center;'>
         <span style='font-size:1.8rem;'>🌙</span>
-        <div style='font-size:1rem; font-weight:600; color:#1B3A5C; margin-top:0.2rem;'>SleepWatch</div>
+        <div style='font-size:1rem; font-weight:600; color:#1B3A5C; margin-top:0.2rem;'>SomniQ Analytics</div>
         <div style='font-size:0.68rem; color:#A8A29E; margin-top:0.1rem;'>
-            Sleep &amp; Conflict · MSBA 382
+            Clinical Sleep Analytics · AUB
         </div>
     </div>""", unsafe_allow_html=True)
     st.divider()
@@ -207,6 +215,15 @@ def apply_filters(df):
     return df[m].copy()
 
 df = apply_filters(patients)
+
+with st.sidebar:
+    pct = len(df) / len(patients) * 100
+    st.markdown(
+        f"<div style='font-size:0.74rem; color:#57534E; padding:0.3rem 0;'>"
+        f"Filter: <b style='color:#1B3A5C;'>{len(df):,}</b> / {len(patients):,} records"
+        f" ({pct:.0f}%)</div>",
+        unsafe_allow_html=True
+    )
 
 def polish(fig):
     fig.update_layout(**BASE)
@@ -242,7 +259,7 @@ if page == "Patient Overview":
     with c2:
         st.metric("Avg Stress Score",
                   f"{df['Stress_Score'].mean():.1f} / 10",
-                  "self-reported, 1""10 scale")
+                  "self-reported, 1-10 scale")
     with c3:
         st.metric("Avg Anxiety (GAD-7)",
                   f"{df['Anxiety_Score'].mean():.1f} / 21",
@@ -289,7 +306,7 @@ if page == "Patient Overview":
         st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Stress levels by disorder</span>", unsafe_allow_html=True)
         fig2 = px.box(df, x="Sleep_Disorder", y="Stress_Score",
                       color="Sleep_Disorder", color_discrete_map=PALETTE,
-                      labels={"Sleep_Disorder": "", "Stress_Score": "Stress (1""10)"})
+                      labels={"Sleep_Disorder": "", "Stress_Score": "Stress (1-10)"})
         polish(fig2)
         fig2.update_layout(showlegend=False, xaxis_tickangle=-20, height=230,
                            margin=dict(t=4, b=36, l=8, r=8))
@@ -391,7 +408,7 @@ elif page == "Global Burden":
     st.markdown("""
     <div class='callout'>
     Conflict-affected countries consistently rank at the top. Lebanon's sleep disorder prevalence
-    has climbed from roughly 38% in 2018 to over 55% in 2026 "" a direct reflection of compounding
+    has climbed from roughly 38% in 2018 to over 55% in 2026 - a direct reflection of compounding
     crises: economic collapse, the Beirut port explosion, and two successive wars.
     </div>
     """, unsafe_allow_html=True)
@@ -418,7 +435,7 @@ elif page == "Global Burden":
     st.markdown("---")
 
     # â"€â"€ Trend chart â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
-    st.markdown("**How Lebanon's sleep disorder rate compares over time (2000""2026)**")
+    st.markdown("**How Lebanon's sleep disorder rate compares over time (2000-2026)**")
 
     TREND_COLORS = {
         "Global_Prevalence":      "#CBD5E1",
@@ -559,7 +576,7 @@ elif page == "Risk Predictor":
     st.markdown("""
     <div class='callout'>
     <strong>Bonus component.</strong> An XGBoost classifier estimates individual sleep disorder risk.
-    SHAP values show exactly which inputs drive each prediction "" making the model transparent
+    SHAP values show exactly which inputs drive each prediction - making the model transparent
     and clinically interpretable.
     </div>
     """, unsafe_allow_html=True)
@@ -575,8 +592,8 @@ elif page == "Risk Predictor":
             age_in     = st.slider("Age", 18, 80, 32)
             gender_in  = st.selectbox("Gender", ["Male", "Female"])
             bmi_in     = st.slider("BMI", 16.0, 50.0, 25.0, 0.5)
-            stress_in  = st.slider("Stress (1""10)", 1, 10, 5)
-            anxiety_in = st.slider("Anxiety / GAD-7 (0""21)", 0, 21, 7)
+            stress_in  = st.slider("Stress (1-10)", 1, 10, 5)
+            anxiety_in = st.slider("Anxiety / GAD-7 (0-21)", 0, 21, 7)
         with c2:
             sleep_in    = st.slider("Avg sleep (hrs)", 2.0, 10.0, 7.0, 0.5)
             caffeine_in = st.slider("Caffeine (cups/day)", 0, 6, 2)
