@@ -314,37 +314,20 @@ if page == "Patient Overview":
                            yaxis=dict(tickfont=dict(size=10)))
         st.plotly_chart(fig3, use_container_width=True)
 
-    # ── Chart row 2: age box | summary table ─────────────────────────────────
-    left2, right2 = st.columns([1.5, 1.5])
-
-    with left2:
-        st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Age profile per disorder</span>", unsafe_allow_html=True)
-        fig4 = px.box(df[df["Sleep_Disorder"] != "No Disorder"],
-                      x="Sleep_Disorder", y="Age",
-                      color="Sleep_Disorder", color_discrete_map=PALETTE,
-                      labels={"Sleep_Disorder": "", "Age": "Age (years)"})
-        polish(fig4)
-        fig4.update_layout(showlegend=False, xaxis_tickangle=-18, height=230,
-                           margin=dict(t=4, b=36, l=8, r=8))
-        fig4.update_traces(line_color="#374151",
-                           marker=dict(size=3, opacity=0.3),
-                           boxmean="sd")
-        st.plotly_chart(fig4, use_container_width=True)
-
-    with right2:
-        st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Summary statistics</span>", unsafe_allow_html=True)
-        summary = df.groupby("Sleep_Disorder").agg(
-            Patients         = ("Age", "count"),
-            Avg_Age          = ("Age",               lambda x: round(x.mean(), 1)),
-            Pct_Female       = ("Gender",             lambda x: f"{(x=='Female').mean()*100:.0f}%"),
-            Avg_Stress       = ("Stress_Score",       lambda x: round(x.mean(), 1)),
-            Avg_Anxiety      = ("Anxiety_Score",      lambda x: round(x.mean(), 1)),
-            Avg_Sleep        = ("Sleep_Duration_Hrs", lambda x: round(x.mean(), 1)),
-            Conflict_Exposed = ("Conflict_Exposed",   lambda x: f"{x.mean()*100:.0f}%"),
-        ).reset_index().sort_values("Patients", ascending=False)
-        summary.columns = ["Disorder", "n", "Avg Age", "% F",
-                           "Stress", "Anxiety", "Sleep hrs", "Conflict"]
-        st.dataframe(summary, use_container_width=True, hide_index=True)
+    # ── Summary table (full width) ────────────────────────────────────────────
+    st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Summary statistics by disorder</span>", unsafe_allow_html=True)
+    summary = df.groupby("Sleep_Disorder").agg(
+        Patients         = ("Age", "count"),
+        Avg_Age          = ("Age",               lambda x: round(x.mean(), 1)),
+        Pct_Female       = ("Gender",             lambda x: f"{(x=='Female').mean()*100:.0f}%"),
+        Avg_Stress       = ("Stress_Score",       lambda x: round(x.mean(), 1)),
+        Avg_Anxiety      = ("Anxiety_Score",      lambda x: round(x.mean(), 1)),
+        Avg_Sleep        = ("Sleep_Duration_Hrs", lambda x: round(x.mean(), 1)),
+        Conflict_Exposed = ("Conflict_Exposed",   lambda x: f"{x.mean()*100:.0f}%"),
+    ).reset_index().sort_values("Patients", ascending=False)
+    summary.columns = ["Disorder", "n", "Avg Age", "% Female",
+                       "Stress", "Anxiety", "Sleep hrs", "% Conflict"]
+    st.dataframe(summary, use_container_width=True, hide_index=True, height=230)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -504,26 +487,13 @@ elif page == "Global Burden":
                 "Sleep_Apnea_Prev_Pct", "Conflict_Index"]
         st.dataframe(
             country[disp].sort_values("Any_Sleep_Disorder_Pct", ascending=False)
-            .rename(columns={"Any_Sleep_Disorder_Pct": "Any (%)",
+            .rename(columns={"Any_Sleep_Disorder_Pct": "Disorder Prev. (%)",
                              "Insomnia_Prev_Pct": "Insomnia (%)",
                              "Sleep_Apnea_Prev_Pct": "Apnea (%)",
-                             "Conflict_Index": "Conflict"}),
+                             "Conflict_Index": "Conflict Index"}),
             use_container_width=True, hide_index=True, height=250
         )
 
-    with st.expander("View full country data table (30 countries)"):
-        disp = ["Country", "Region", "Any_Sleep_Disorder_Pct", "Insomnia_Prev_Pct",
-                "Sleep_Apnea_Prev_Pct", "Anxiety_Prev_Pct", "Stress_Index", "Conflict_Index"]
-        st.dataframe(
-            country[disp].sort_values("Any_Sleep_Disorder_Pct", ascending=False)
-            .rename(columns={"Any_Sleep_Disorder_Pct": "Any Disorder (%)",
-                             "Insomnia_Prev_Pct": "Insomnia (%)",
-                             "Sleep_Apnea_Prev_Pct": "Sleep Apnea (%)",
-                             "Anxiety_Prev_Pct": "Anxiety (%)",
-                             "Stress_Index": "Stress Index",
-                             "Conflict_Index": "Conflict Index"}),
-            use_container_width=True, hide_index=True
-        )
     st.caption("Sources: WHO GHO · IHME GBD · Hallit et al. (2020) · BMC Public Health (2025) · "
                "Research Square (2025) · Tandfonline (2025) | MSBA 382, AUB, Summer 2026")
 
