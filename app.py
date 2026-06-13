@@ -529,10 +529,8 @@ elif page == "🤖 Risk Predictor":
                     "PA_enc", "Conflict_Exposed", "Occ_enc",
                     "Smoking", "Alcohol_Use", "Chronic_Pain"]
 
-        # Stratified sample for fast training on cloud
-        df_ml = df_ml.groupby("Target", group_keys=False).apply(
-            lambda x: x.sample(min(len(x), 2000), random_state=42)
-        )
+        # Sample for fast training on cloud
+        df_ml = df_ml.sample(n=4000, random_state=42).reset_index(drop=True)
 
         X = df_ml[features]
         y = df_ml["Target"]
