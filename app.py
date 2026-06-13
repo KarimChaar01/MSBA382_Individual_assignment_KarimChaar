@@ -693,7 +693,7 @@ elif page == "Risk Predictor":
         auc    = round(roc_auc_score(y_test, y_prob), 3)
         acc    = round((y_pred == y_test).mean() * 100, 1)
 
-        st.markdown(f"Trained on a stratified sample of **4,000 records** (80/20 split) · "
+        st.markdown(f"Trained on a stratified synthetic sample of **20,000 records** (80/20 split) · "
                     f"Accuracy **{acc}%** · ROC-AUC **{auc}**")
         st.markdown("<div style='margin-top:0.5rem'></div>", unsafe_allow_html=True)
 
