@@ -280,37 +280,62 @@ if page == "Patient Overview":
         st.plotly_chart(fig1, use_container_width=True)
 
     with right:
-        st.markdown("**Stress levels across disorder groups**")
-        fig2 = px.box(df, x="Sleep_Disorder", y="Stress_Score",
-                      color="Sleep_Disorder", color_discrete_map=PALETTE,
-                      labels={"Sleep_Disorder": "", "Stress_Score": "Stress score (1–10)"},
-                      category_orders={"Sleep_Disorder": ALL_CATS})
-        polish(fig2)
-        fig2.update_layout(showlegend=False, xaxis_tickangle=-18)
-        fig2.update_traces(line_color="#374151", fillcolor=None,
-                           marker=dict(size=3, opacity=0.35),
-                           boxmean="sd")
+        st.markdown("**Mean stress score by disorder (±1 SD)**")
+        stress_agg = (df.groupby("Sleep_Disorder")["Stress_Score"]
+                      .agg(Mean="mean", Std="std").reset_index()
+                      .sort_values("Mean"))
+        fig2 = go.Figure()
+        for _, row in stress_agg.iterrows():
+            fig2.add_trace(go.Bar(
+                x=[row["Mean"]], y=[row["Sleep_Disorder"]],
+                orientation="h",
+                error_x=dict(type="data", array=[row["Std"]], visible=True,
+                             color="#9CA3AF", thickness=1.5, width=6),
+                marker_color=PALETTE.get(row["Sleep_Disorder"], "#9CA3AF"),
+                name=row["Sleep_Disorder"],
+                showlegend=False,
+                hovertemplate=f"<b>{row['Sleep_Disorder']}</b><br>Mean: {row['Mean']:.2f} / SD: {row['Std']:.2f}<extra></extra>"
+            ))
+        fig2.update_layout(**{**BASE, "margin": dict(t=10, b=28, l=150, r=55)},
+                           xaxis=dict(title="Mean stress score (1–10)", range=[0, 11],
+                                      showgrid=True, gridcolor="#F3F4F6"),
+                           yaxis=dict(tickfont=dict(size=11)))
         st.plotly_chart(fig2, use_container_width=True)
 
-    # ── Chart row 2: conflict grouped bar (full width) ─────────────────────────
-    st.markdown("**Conflict exposure by disorder — does being in a war zone raise risk?**")
-    cross = (df[df["Sleep_Disorder"] != "No Disorder"]
-             .groupby(["Sleep_Disorder", "Conflict_Exposed"]).size()
-             .reset_index(name="Count"))
-    cross["Exposure"] = cross["Conflict_Exposed"].map({0: "Not exposed", 1: "Conflict-exposed"})
-    conflict_pct = cross.copy()
-    totals = cross.groupby("Sleep_Disorder")["Count"].transform("sum")
-    conflict_pct["Pct"] = (cross["Count"] / totals * 100).round(1)
+    # ── Chart row 2: conflict lollipop (full width) ───────────────────────────
+    st.markdown("**Conflict exposure rate by disorder — share of patients with war/crisis history**")
+    conf_rate = (df[df["Sleep_Disorder"] != "No Disorder"]
+                 .groupby("Sleep_Disorder")["Conflict_Exposed"]
+                 .mean().reset_index())
+    conf_rate.columns = ["Disorder", "Rate"]
+    conf_rate["Pct"] = conf_rate["Rate"] * 100
+    conf_rate = conf_rate.sort_values("Pct")
 
-    fig3 = px.bar(conflict_pct, x="Sleep_Disorder", y="Pct", color="Exposure",
-                  barmode="group",
-                  color_discrete_map={"Not exposed": "#CBD5E1", "Conflict-exposed": "#DC2626"},
-                  text="Pct",
-                  labels={"Sleep_Disorder": "", "Pct": "% of disorder group"})
-    fig3.update_traces(texttemplate="%{text:.0f}%", textposition="outside")
-    polish(fig3)
-    fig3.update_layout(legend_title="", legend=dict(orientation="h", y=1.06),
-                       xaxis_tickangle=-12, yaxis_range=[0, 110])
+    fig3 = go.Figure()
+    for _, row in conf_rate.iterrows():
+        c = PALETTE.get(row["Disorder"], "#6B7280")
+        fig3.add_trace(go.Scatter(
+            x=[0, row["Pct"]], y=[row["Disorder"], row["Disorder"]],
+            mode="lines", line=dict(color="#E5E7EB", width=2.5),
+            showlegend=False, hoverinfo="skip"
+        ))
+        fig3.add_trace(go.Scatter(
+            x=[row["Pct"]], y=[row["Disorder"]],
+            mode="markers+text",
+            marker=dict(size=18, color=c, line=dict(color="white", width=2)),
+            text=[f"{row['Pct']:.1f}%"],
+            textposition="middle right",
+            textfont=dict(size=11, color="#374151"),
+            name=row["Disorder"], showlegend=False,
+            hovertemplate=f"<b>{row['Disorder']}</b><br>Conflict-exposed: {row['Pct']:.1f}%<extra></extra>"
+        ))
+    fig3.update_layout(
+        **{**BASE, "margin": dict(t=10, b=28, l=155, r=70)},
+        xaxis=dict(title="% of patients with conflict/crisis exposure", range=[0, 115],
+                   showgrid=True, gridcolor="#F3F4F6", ticksuffix="%"),
+        yaxis=dict(tickfont=dict(size=11)),
+        height=260
+    )
     st.plotly_chart(fig3, use_container_width=True)
 
     # ── Chart row 3: age box + summary table ─────────────────────────────────
