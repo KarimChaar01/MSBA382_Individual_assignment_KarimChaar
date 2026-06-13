@@ -35,22 +35,22 @@ html, body, [class*="css"], h1, h2, h3, h4, p, span, div, label, button,
     background: #FAFAF8;
     border: 1px solid #E8E3DA;
     border-radius: 10px;
-    padding: 0.9rem 1rem 0.8rem;
+    padding: 0.6rem 0.9rem 0.5rem;
 }
 [data-testid="stMetricValue"] {
-    font-size: 1.9rem !important;
+    font-size: 1.5rem !important;
     font-weight: 600 !important;
     color: #1B3A5C !important;
 }
 [data-testid="stMetricLabel"] {
-    font-size: 0.72rem !important;
+    font-size: 0.68rem !important;
     color: #8C8680 !important;
     text-transform: uppercase;
     letter-spacing: 0.06em;
 }
 [data-testid="stMetricDelta"] svg { display: none; }
 [data-testid="stMetricDelta"] > div {
-    font-size: 0.75rem !important;
+    font-size: 0.70rem !important;
     color: #8C8680 !important;
 }
 
@@ -261,101 +261,78 @@ if page == "Patient Overview":
                .value_counts().idxmax() if affected else "N/A")
         st.metric("Most Common Disorder", top, "by patient count")
 
-    st.markdown("---")
+    st.markdown("<div style='margin-top:0.4rem'></div>", unsafe_allow_html=True)
 
-    # ── Chart row 1: donut + violin ───────────────────────────────────────────
-    left, right = st.columns([1.3, 1.7])
+    # ── Chart row 1: donut | stress bar | conflict lollipop ───────────────────
+    col1, col2, col3 = st.columns([1, 1.1, 1.1])
 
-    with left:
-        st.markdown("**Breakdown by disorder type**")
+    with col1:
+        st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Disorder breakdown</span>", unsafe_allow_html=True)
         counts = (df[df["Sleep_Disorder"] != "No Disorder"]["Sleep_Disorder"]
                   .value_counts().reset_index())
         counts.columns = ["Disorder", "Count"]
         fig1 = px.pie(counts, names="Disorder", values="Count",
                       color="Disorder", color_discrete_map=PALETTE, hole=0.52)
-        fig1.update_layout(**BASE, legend=dict(orientation="h", y=-0.14))
-        fig1.update_traces(textinfo="percent", textfont_size=12,
-                           marker=dict(line=dict(color="white", width=2.5)),
-                           hovertemplate="<b>%{label}</b><br>%{value:,} patients<br>%{percent}<extra></extra>")
+        fig1.update_layout(**{**BASE, "margin": dict(t=4, b=4, l=4, r=4)},
+                           height=230,
+                           legend=dict(orientation="h", y=-0.18, font=dict(size=9)))
+        fig1.update_traces(textinfo="percent", textfont_size=10,
+                           marker=dict(line=dict(color="white", width=2)),
+                           hovertemplate="<b>%{label}</b><br>%{value:,} patients · %{percent}<extra></extra>")
         st.plotly_chart(fig1, use_container_width=True)
 
-    with right:
-        st.markdown("**Mean stress score by disorder (±1 SD)**")
-        stress_agg = (df.groupby("Sleep_Disorder")["Stress_Score"]
-                      .agg(Mean="mean", Std="std").reset_index()
-                      .sort_values("Mean"))
-        fig2 = go.Figure()
-        for _, row in stress_agg.iterrows():
-            fig2.add_trace(go.Bar(
-                x=[row["Mean"]], y=[row["Sleep_Disorder"]],
-                orientation="h",
-                error_x=dict(type="data", array=[row["Std"]], visible=True,
-                             color="#9CA3AF", thickness=1.5, width=6),
-                marker_color=PALETTE.get(row["Sleep_Disorder"], "#9CA3AF"),
-                name=row["Sleep_Disorder"],
-                showlegend=False,
-                hovertemplate=f"<b>{row['Sleep_Disorder']}</b><br>Mean: {row['Mean']:.2f} / SD: {row['Std']:.2f}<extra></extra>"
-            ))
-        fig2.update_layout(**{**BASE, "margin": dict(t=10, b=28, l=150, r=55)},
-                           xaxis=dict(title="Mean stress score (1–10)", range=[0, 11],
-                                      showgrid=True, gridcolor="#F3F4F6"),
-                           yaxis=dict(tickfont=dict(size=11)))
+    with col2:
+        st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Stress levels by disorder</span>", unsafe_allow_html=True)
+        fig2 = px.box(df, x="Sleep_Disorder", y="Stress_Score",
+                      color="Sleep_Disorder", color_discrete_map=PALETTE,
+                      labels={"Sleep_Disorder": "", "Stress_Score": "Stress (1–10)"})
+        polish(fig2)
+        fig2.update_layout(showlegend=False, xaxis_tickangle=-20, height=230,
+                           margin=dict(t=4, b=36, l=8, r=8))
+        fig2.update_traces(marker=dict(size=2, opacity=0.3))
         st.plotly_chart(fig2, use_container_width=True)
 
-    # ── Chart row 2: conflict lollipop (full width) ───────────────────────────
-    st.markdown("**Conflict exposure rate by disorder — share of patients with war/crisis history**")
-    conf_rate = (df[df["Sleep_Disorder"] != "No Disorder"]
-                 .groupby("Sleep_Disorder")["Conflict_Exposed"]
-                 .mean().reset_index())
-    conf_rate.columns = ["Disorder", "Rate"]
-    conf_rate["Pct"] = conf_rate["Rate"] * 100
-    conf_rate = conf_rate.sort_values("Pct")
+    with col3:
+        st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Conflict exposure rate</span>", unsafe_allow_html=True)
+        conf_rate = (df[df["Sleep_Disorder"] != "No Disorder"]
+                     .groupby("Sleep_Disorder")["Conflict_Exposed"]
+                     .mean().reset_index())
+        conf_rate.columns = ["Disorder", "Rate"]
+        conf_rate["Pct"] = conf_rate["Rate"] * 100
+        conf_rate = conf_rate.sort_values("Pct", ascending=True)
+        fig3 = px.bar(conf_rate, x="Pct", y="Disorder", orientation="h",
+                      color="Disorder", color_discrete_map=PALETTE,
+                      labels={"Pct": "% conflict-exposed", "Disorder": ""},
+                      text="Pct")
+        fig3.update_traces(texttemplate="%{x:.0f}%", textposition="auto",
+                           showlegend=False)
+        fig3.update_layout(**{**BASE, "margin": dict(t=4, b=28, l=130, r=20)},
+                           height=230,
+                           xaxis=dict(title="% conflict-exposed", range=[0, 100],
+                                      showgrid=True, gridcolor="#F3F4F6",
+                                      tickfont=dict(size=10)),
+                           yaxis=dict(tickfont=dict(size=10)))
+        st.plotly_chart(fig3, use_container_width=True)
 
-    fig3 = go.Figure()
-    for _, row in conf_rate.iterrows():
-        c = PALETTE.get(row["Disorder"], "#6B7280")
-        fig3.add_trace(go.Scatter(
-            x=[0, row["Pct"]], y=[row["Disorder"], row["Disorder"]],
-            mode="lines", line=dict(color="#E5E7EB", width=2.5),
-            showlegend=False, hoverinfo="skip"
-        ))
-        fig3.add_trace(go.Scatter(
-            x=[row["Pct"]], y=[row["Disorder"]],
-            mode="markers+text",
-            marker=dict(size=18, color=c, line=dict(color="white", width=2)),
-            text=[f"{row['Pct']:.1f}%"],
-            textposition="middle right",
-            textfont=dict(size=11, color="#374151"),
-            name=row["Disorder"], showlegend=False,
-            hovertemplate=f"<b>{row['Disorder']}</b><br>Conflict-exposed: {row['Pct']:.1f}%<extra></extra>"
-        ))
-    fig3.update_layout(
-        **{**BASE, "margin": dict(t=10, b=28, l=155, r=70)},
-        xaxis=dict(title="% of patients with conflict/crisis exposure", range=[0, 115],
-                   showgrid=True, gridcolor="#F3F4F6", ticksuffix="%"),
-        yaxis=dict(tickfont=dict(size=11)),
-        height=260
-    )
-    st.plotly_chart(fig3, use_container_width=True)
-
-    # ── Chart row 3: age box + summary table ─────────────────────────────────
-    left2, right2 = st.columns([1.6, 1.4])
+    # ── Chart row 2: age box | summary table ─────────────────────────────────
+    left2, right2 = st.columns([1.5, 1.5])
 
     with left2:
-        st.markdown("**Age profile per disorder**")
+        st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Age profile per disorder</span>", unsafe_allow_html=True)
         fig4 = px.box(df[df["Sleep_Disorder"] != "No Disorder"],
                       x="Sleep_Disorder", y="Age",
                       color="Sleep_Disorder", color_discrete_map=PALETTE,
                       labels={"Sleep_Disorder": "", "Age": "Age (years)"})
         polish(fig4)
-        fig4.update_layout(showlegend=False, xaxis_tickangle=-18)
+        fig4.update_layout(showlegend=False, xaxis_tickangle=-18, height=230,
+                           margin=dict(t=4, b=36, l=8, r=8))
         fig4.update_traces(line_color="#374151",
-                           marker=dict(size=3, opacity=0.35),
+                           marker=dict(size=3, opacity=0.3),
                            boxmean="sd")
         st.plotly_chart(fig4, use_container_width=True)
 
     with right2:
-        st.markdown("**Summary statistics**")
+        st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Summary statistics</span>", unsafe_allow_html=True)
         summary = df.groupby("Sleep_Disorder").agg(
             Patients         = ("Age", "count"),
             Avg_Age          = ("Age",               lambda x: round(x.mean(), 1)),
@@ -443,37 +420,40 @@ elif page == "Global Burden":
         fig_t.add_vline(x=yr, line_dash="dot", line_color="#DC2626", opacity=0.22)
     fig_t.update_layout(
         **{**BASE, "margin": dict(t=55, b=36, l=8, r=8)},
+        height=280,
         xaxis_title="Year", yaxis_title="Estimated prevalence (%)",
         legend=dict(orientation="h", yanchor="bottom", y=1.01, x=0),
         hovermode="x unified", yaxis=dict(range=[8, 72])
     )
     st.plotly_chart(fig_t, use_container_width=True)
 
-    # ── World map ─────────────────────────────────────────────────────────────
-    st.markdown("**Global prevalence map — color intensity reflects disorder burden**")
-    fig_map = px.choropleth(
-        country, locations="ISO3", color="Any_Sleep_Disorder_Pct",
-        hover_name="Country",
-        hover_data={"ISO3": False, "Region": True,
-                    "Any_Sleep_Disorder_Pct": ":.1f", "Conflict_Index": ":.2f"},
-        color_continuous_scale="Blues",
-        projection="natural earth",
-        labels={"Any_Sleep_Disorder_Pct": "Prevalence (%)"}
-    )
-    fig_map.update_layout(
-        paper_bgcolor="white",
-        geo=dict(showframe=False, showcoastlines=True, coastlinecolor="#D1D5DB",
-                 showland=True, landcolor="#F9FAFB"),
-        margin=dict(t=0, b=0, l=0, r=0),
-        coloraxis_colorbar=dict(title="Prev. (%)", tickfont=dict(size=10))
-    )
-    st.plotly_chart(fig_map, use_container_width=True)
+    # ── Map + Top 15 side by side ─────────────────────────────────────────────
+    map_col, bar_col = st.columns([1.6, 1.4])
 
-    # ── Top 15 bar + Scatter ──────────────────────────────────────────────────
-    left, right = st.columns([1.5, 1.5])
+    with map_col:
+        st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Global prevalence map</span>", unsafe_allow_html=True)
+        fig_map = px.choropleth(
+            country, locations="ISO3", color="Any_Sleep_Disorder_Pct",
+            hover_name="Country",
+            hover_data={"ISO3": False, "Region": True,
+                        "Any_Sleep_Disorder_Pct": ":.1f", "Conflict_Index": ":.2f"},
+            color_continuous_scale="Blues",
+            projection="natural earth",
+            labels={"Any_Sleep_Disorder_Pct": "Prevalence (%)"}
+        )
+        fig_map.update_layout(
+            paper_bgcolor="white",
+            geo=dict(showframe=False, showcoastlines=True, coastlinecolor="#D1D5DB",
+                     showland=True, landcolor="#F9FAFB"),
+            margin=dict(t=0, b=0, l=0, r=0),
+            height=270,
+            coloraxis_colorbar=dict(title="Prev. (%)", tickfont=dict(size=9),
+                                    thickness=10, len=0.7)
+        )
+        st.plotly_chart(fig_map, use_container_width=True)
 
-    with left:
-        st.markdown("**Top 15 countries by sleep disorder prevalence**")
+    with bar_col:
+        st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Top 15 countries by prevalence</span>", unsafe_allow_html=True)
         top15 = country.nlargest(15, "Any_Sleep_Disorder_Pct").sort_values("Any_Sleep_Disorder_Pct").copy()
         top15["Conflict_Tier"] = top15["Conflict_Index"].apply(
             lambda x: "High conflict" if x >= 0.7 else ("Moderate" if x >= 0.4 else "Low conflict")
@@ -486,23 +466,24 @@ elif page == "Global Burden":
             labels={"Any_Sleep_Disorder_Pct": "Prevalence (%)", "Conflict_Tier": "Conflict level"},
             category_orders={"Conflict_Tier": ["High conflict", "Moderate", "Low conflict"]}
         )
-        fig_b.update_traces(
-            texttemplate="%{x:.1f}%",
-            textposition="inside",
-            textfont=dict(color="white", size=11)
-        )
+        fig_b.update_traces(texttemplate="%{x:.1f}%", textposition="inside",
+                            textfont=dict(color="white", size=9))
         fig_b.update_layout(
-            **{**BASE, "margin": dict(t=10, b=28, l=120, r=50)},
+            **{**BASE, "margin": dict(t=4, b=28, l=100, r=10)},
+            height=270,
             xaxis=dict(range=[0, top15["Any_Sleep_Disorder_Pct"].max() * 1.05],
-                       showgrid=True, gridcolor="#F3F4F6"),
-            yaxis=dict(tickfont=dict(size=10)),
-            legend=dict(orientation="h", y=-0.15, font=dict(size=10)),
-            bargap=0.25,
+                       showgrid=True, gridcolor="#F3F4F6", tickfont=dict(size=9)),
+            yaxis=dict(tickfont=dict(size=9)),
+            legend=dict(orientation="h", y=-0.18, font=dict(size=9)),
+            bargap=0.2,
         )
         st.plotly_chart(fig_b, use_container_width=True)
 
-    with right:
-        st.markdown("**Does conflict drive prevalence? (OLS trendline)**")
+    # ── Scatter (conflict vs prevalence) ──────────────────────────────────────
+    left, right = st.columns([1.5, 1.5])
+
+    with left:
+        st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Does conflict drive prevalence? (OLS)</span>", unsafe_allow_html=True)
         fig_sc = px.scatter(
             country, x="Conflict_Index", y="Any_Sleep_Disorder_Pct",
             color="Region", size="Any_Sleep_Disorder_Pct",
@@ -512,23 +493,37 @@ elif page == "Global Burden":
             color_discrete_sequence=px.colors.qualitative.Safe
         )
         polish(fig_sc)
-        fig_sc.update_layout(legend=dict(orientation="h", y=-0.22, font=dict(size=10)))
+        fig_sc.update_layout(height=250,
+                             legend=dict(orientation="h", y=-0.28, font=dict(size=9)),
+                             margin=dict(t=4, b=36, l=8, r=8))
         st.plotly_chart(fig_sc, use_container_width=True)
 
-    st.markdown("---")
-    st.markdown("**Country data table**")
-    disp = ["Country", "Region", "Any_Sleep_Disorder_Pct", "Insomnia_Prev_Pct",
-            "Sleep_Apnea_Prev_Pct", "Anxiety_Prev_Pct", "Stress_Index", "Conflict_Index"]
-    st.dataframe(
-        country[disp].sort_values("Any_Sleep_Disorder_Pct", ascending=False)
-        .rename(columns={"Any_Sleep_Disorder_Pct": "Any Disorder (%)",
-                         "Insomnia_Prev_Pct": "Insomnia (%)",
-                         "Sleep_Apnea_Prev_Pct": "Sleep Apnea (%)",
-                         "Anxiety_Prev_Pct": "Anxiety (%)",
-                         "Stress_Index": "Stress Index",
-                         "Conflict_Index": "Conflict Index"}),
-        use_container_width=True, hide_index=True
-    )
+    with right:
+        st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Country data</span>", unsafe_allow_html=True)
+        disp = ["Country", "Region", "Any_Sleep_Disorder_Pct", "Insomnia_Prev_Pct",
+                "Sleep_Apnea_Prev_Pct", "Conflict_Index"]
+        st.dataframe(
+            country[disp].sort_values("Any_Sleep_Disorder_Pct", ascending=False)
+            .rename(columns={"Any_Sleep_Disorder_Pct": "Any (%)",
+                             "Insomnia_Prev_Pct": "Insomnia (%)",
+                             "Sleep_Apnea_Prev_Pct": "Apnea (%)",
+                             "Conflict_Index": "Conflict"}),
+            use_container_width=True, hide_index=True, height=250
+        )
+
+    with st.expander("View full country data table (30 countries)"):
+        disp = ["Country", "Region", "Any_Sleep_Disorder_Pct", "Insomnia_Prev_Pct",
+                "Sleep_Apnea_Prev_Pct", "Anxiety_Prev_Pct", "Stress_Index", "Conflict_Index"]
+        st.dataframe(
+            country[disp].sort_values("Any_Sleep_Disorder_Pct", ascending=False)
+            .rename(columns={"Any_Sleep_Disorder_Pct": "Any Disorder (%)",
+                             "Insomnia_Prev_Pct": "Insomnia (%)",
+                             "Sleep_Apnea_Prev_Pct": "Sleep Apnea (%)",
+                             "Anxiety_Prev_Pct": "Anxiety (%)",
+                             "Stress_Index": "Stress Index",
+                             "Conflict_Index": "Conflict Index"}),
+            use_container_width=True, hide_index=True
+        )
     st.caption("Sources: WHO GHO · IHME GBD · Hallit et al. (2020) · BMC Public Health (2025) · "
                "Research Square (2025) · Tandfonline (2025) | MSBA 382, AUB, Summer 2026")
 
