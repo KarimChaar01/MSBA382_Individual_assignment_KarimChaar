@@ -318,20 +318,50 @@ if page == "Patient Overview":
                            yaxis=dict(tickfont=dict(size=10)))
         st.plotly_chart(fig3, use_container_width=True)
 
-    # ── Summary table (full width) ────────────────────────────────────────────
-    st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Summary statistics by disorder</span>", unsafe_allow_html=True)
-    summary = df.groupby("Sleep_Disorder").agg(
-        Patients         = ("Age", "count"),
-        Avg_Age          = ("Age",               lambda x: round(x.mean(), 1)),
-        Pct_Female       = ("Gender",             lambda x: f"{(x=='Female').mean()*100:.0f}%"),
-        Avg_Stress       = ("Stress_Score",       lambda x: round(x.mean(), 1)),
-        Avg_Anxiety      = ("Anxiety_Score",      lambda x: round(x.mean(), 1)),
-        Avg_Sleep        = ("Sleep_Duration_Hrs", lambda x: round(x.mean(), 1)),
-        Conflict_Exposed = ("Conflict_Exposed",   lambda x: f"{x.mean()*100:.0f}%"),
-    ).reset_index().sort_values("Patients", ascending=False)
-    summary.columns = ["Disorder", "n", "Avg Age", "% Female",
-                       "Stress", "Anxiety", "Sleep hrs", "% Conflict"]
-    st.dataframe(summary, use_container_width=True, hide_index=True, height=230)
+    # ── Sleep duration + Anxiety side by side ────────────────────────────────
+    sl_col, anx_col = st.columns(2)
+
+    with sl_col:
+        st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Avg sleep duration by disorder</span>", unsafe_allow_html=True)
+        sleep_agg = (df.groupby("Sleep_Disorder")["Sleep_Duration_Hrs"]
+                     .mean().reset_index()
+                     .rename(columns={"Sleep_Duration_Hrs": "Avg_Sleep"})
+                     .sort_values("Avg_Sleep", ascending=True))
+        fig_sl = px.bar(sleep_agg, x="Avg_Sleep", y="Sleep_Disorder", orientation="h",
+                        color="Sleep_Disorder", color_discrete_map=PALETTE,
+                        labels={"Avg_Sleep": "Avg hours / night", "Sleep_Disorder": ""},
+                        text="Avg_Sleep")
+        fig_sl.update_traces(texttemplate="%{x:.1f} hrs", textposition="inside",
+                             showlegend=False)
+        fig_sl.update_layout(
+            **{**BASE, "margin": dict(t=4, b=28, l=130, r=20)},
+            height=230,
+            xaxis=dict(title="Avg hours / night", range=[0, 10],
+                       showgrid=True, gridcolor="#F3F4F6", tickfont=dict(size=10)),
+            yaxis=dict(tickfont=dict(size=10))
+        )
+        st.plotly_chart(fig_sl, use_container_width=True)
+
+    with anx_col:
+        st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Avg anxiety score (GAD-7) by disorder</span>", unsafe_allow_html=True)
+        anx_agg = (df.groupby("Sleep_Disorder")["Anxiety_Score"]
+                   .mean().reset_index()
+                   .rename(columns={"Anxiety_Score": "Avg_Anxiety"})
+                   .sort_values("Avg_Anxiety", ascending=True))
+        fig_anx = px.bar(anx_agg, x="Avg_Anxiety", y="Sleep_Disorder", orientation="h",
+                         color="Sleep_Disorder", color_discrete_map=PALETTE,
+                         labels={"Avg_Anxiety": "GAD-7 score (0–21)", "Sleep_Disorder": ""},
+                         text="Avg_Anxiety")
+        fig_anx.update_traces(texttemplate="%{x:.1f}", textposition="inside",
+                              showlegend=False)
+        fig_anx.update_layout(
+            **{**BASE, "margin": dict(t=4, b=28, l=130, r=20)},
+            height=230,
+            xaxis=dict(title="GAD-7 score (0–21)", range=[0, 22],
+                       showgrid=True, gridcolor="#F3F4F6", tickfont=dict(size=10)),
+            yaxis=dict(tickfont=dict(size=10))
+        )
+        st.plotly_chart(fig_anx, use_container_width=True)
 
 
 # ══════════════════════════════════════════════════════════════════════════════
