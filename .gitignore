@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+data/*.zip
+data/*.tmp
+data/DASS_extracted/
+data/plos_extracted/
+*.docx
