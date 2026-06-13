@@ -86,7 +86,7 @@ section[data-testid="stSidebar"] {
 """, unsafe_allow_html=True)
 
 
-# â”€â”€ Password gate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Password gate â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 def check_password():
     if st.session_state.get("authenticated"):
         return True
@@ -119,7 +119,7 @@ if not check_password():
     st.stop()
 
 
-# â”€â”€ Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Data â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 @st.cache_data(show_spinner="Loading data…")
 def load_data():
     p = pd.read_csv("data/patient_data.csv")
@@ -166,7 +166,7 @@ FEAT_LABELS = ["Age", "Gender", "BMI", "Stress", "Anxiety (GAD-7)",
                "Job Stress", "Smoking", "Alcohol", "Chronic Pain"]
 
 
-# â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Sidebar â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 with st.sidebar:
     st.markdown("""
     <div style='padding:0.6rem 0 0.2rem; text-align:center;'>
@@ -195,7 +195,7 @@ with st.sidebar:
     st.caption("WHO GHO · IHME GBD · DASS-42 · Kaggle · Hallit 2020 · BMC 2025")
 
 
-# â”€â”€ Filter helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# â"€â"€ Filter helper â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
 def apply_filters(df):
     m = (df["Gender"].isin(gender_filter) &
          df["Age"].between(*age_range) &
@@ -216,7 +216,7 @@ def polish(fig):
 
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-# PAGE 1 "” PATIENT OVERVIEW
+# PAGE 1 "" PATIENT OVERVIEW
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 if page == "Patient Overview":
 
@@ -233,7 +233,7 @@ if page == "Patient Overview":
     </div>
     """, unsafe_allow_html=True)
 
-    # â”€â”€ KPIs row 1 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # â"€â"€ KPIs row 1 â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
     c1, c2, c3 = st.columns(3)
     with c1:
         st.metric("Disorder Prevalence",
@@ -242,7 +242,7 @@ if page == "Patient Overview":
     with c2:
         st.metric("Avg Stress Score",
                   f"{df['Stress_Score'].mean():.1f} / 10",
-                  "self-reported, 1"“10 scale")
+                  "self-reported, 1""10 scale")
     with c3:
         st.metric("Avg Anxiety (GAD-7)",
                   f"{df['Anxiety_Score'].mean():.1f} / 21",
@@ -250,7 +250,7 @@ if page == "Patient Overview":
 
     st.markdown("<div style='margin-top:0.8rem'></div>", unsafe_allow_html=True)
 
-    # â”€â”€ KPIs row 2 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # â"€â"€ KPIs row 2 â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
     c4, c5, c6 = st.columns(3)
     with c4:
         st.metric("Avg Sleep Duration",
@@ -267,7 +267,7 @@ if page == "Patient Overview":
 
     st.markdown("<div style='margin-top:0.4rem'></div>", unsafe_allow_html=True)
 
-    # â”€â”€ Chart row 1: donut | stress bar | conflict lollipop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # â"€â"€ Chart row 1: donut | stress bar | conflict lollipop â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
     col1, col2, col3 = st.columns([1, 1.1, 1.1])
 
     with col1:
@@ -289,7 +289,7 @@ if page == "Patient Overview":
         st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Stress levels by disorder</span>", unsafe_allow_html=True)
         fig2 = px.box(df, x="Sleep_Disorder", y="Stress_Score",
                       color="Sleep_Disorder", color_discrete_map=PALETTE,
-                      labels={"Sleep_Disorder": "", "Stress_Score": "Stress (1"“10)"})
+                      labels={"Sleep_Disorder": "", "Stress_Score": "Stress (1""10)"})
         polish(fig2)
         fig2.update_layout(showlegend=False, xaxis_tickangle=-20, height=230,
                            margin=dict(t=4, b=36, l=8, r=8))
@@ -318,7 +318,7 @@ if page == "Patient Overview":
                            yaxis=dict(tickfont=dict(size=10)))
         st.plotly_chart(fig3, use_container_width=True)
 
-    # â”€â”€ Scatter (stress vs sleep) + Heatmap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # â"€â"€ Scatter (stress vs sleep) + Heatmap â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
     sc_col, hm_col = st.columns(2)
 
     with sc_col:
@@ -383,7 +383,7 @@ if page == "Patient Overview":
 
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-# PAGE 2 "” GLOBAL BURDEN
+# PAGE 2 "" GLOBAL BURDEN
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elif page == "Global Burden":
 
@@ -391,12 +391,12 @@ elif page == "Global Burden":
     st.markdown("""
     <div class='callout'>
     Conflict-affected countries consistently rank at the top. Lebanon's sleep disorder prevalence
-    has climbed from roughly 38% in 2018 to over 55% in 2026 "” a direct reflection of compounding
+    has climbed from roughly 38% in 2018 to over 55% in 2026 "" a direct reflection of compounding
     crises: economic collapse, the Beirut port explosion, and two successive wars.
     </div>
     """, unsafe_allow_html=True)
 
-    # â”€â”€ KPIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # â"€â"€ KPIs â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
     lbn_now  = trend[trend["Year"] == 2026]["Lebanon_Prevalence"].values[0]
     lbn_base = trend[trend["Year"] == 2018]["Lebanon_Prevalence"].values[0]
     pal_prev = country[country["Country"] == "Palestine"]["Any_Sleep_Disorder_Pct"].values[0]
@@ -417,8 +417,8 @@ elif page == "Global Burden":
 
     st.markdown("---")
 
-    # â”€â”€ Trend chart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    st.markdown("**How Lebanon's sleep disorder rate compares over time (2000"“2026)**")
+    # â"€â"€ Trend chart â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
+    st.markdown("**How Lebanon's sleep disorder rate compares over time (2000""2026)**")
 
     TREND_COLORS = {
         "Global_Prevalence":      "#CBD5E1",
@@ -462,7 +462,7 @@ elif page == "Global Burden":
     )
     st.plotly_chart(fig_t, use_container_width=True)
 
-    # â”€â”€ Map + Top 15 side by side â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # â"€â"€ Map + Top 15 side by side â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
     map_col, bar_col = st.columns([1.6, 1.4])
 
     with map_col:
@@ -514,7 +514,7 @@ elif page == "Global Burden":
         )
         st.plotly_chart(fig_b, use_container_width=True)
 
-    # â”€â”€ Scatter (conflict vs prevalence) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    # â"€â"€ Scatter (conflict vs prevalence) â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€â"€
     left, right = st.columns([1.5, 1.5])
 
     with left:
@@ -551,7 +551,7 @@ elif page == "Global Burden":
 
 
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-# PAGE 3 "” RISK PREDICTOR
+# PAGE 3 "" RISK PREDICTOR
 # â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elif page == "Risk Predictor":
 
@@ -559,7 +559,7 @@ elif page == "Risk Predictor":
     st.markdown("""
     <div class='callout'>
     <strong>Bonus component.</strong> An XGBoost classifier estimates individual sleep disorder risk.
-    SHAP values show exactly which inputs drive each prediction "” making the model transparent
+    SHAP values show exactly which inputs drive each prediction "" making the model transparent
     and clinically interpretable.
     </div>
     """, unsafe_allow_html=True)
@@ -575,8 +575,8 @@ elif page == "Risk Predictor":
             age_in     = st.slider("Age", 18, 80, 32)
             gender_in  = st.selectbox("Gender", ["Male", "Female"])
             bmi_in     = st.slider("BMI", 16.0, 50.0, 25.0, 0.5)
-            stress_in  = st.slider("Stress (1"“10)", 1, 10, 5)
-            anxiety_in = st.slider("Anxiety / GAD-7 (0"“21)", 0, 21, 7)
+            stress_in  = st.slider("Stress (1""10)", 1, 10, 5)
+            anxiety_in = st.slider("Anxiety / GAD-7 (0""21)", 0, 21, 7)
         with c2:
             sleep_in    = st.slider("Avg sleep (hrs)", 2.0, 10.0, 7.0, 0.5)
             caffeine_in = st.slider("Caffeine (cups/day)", 0, 6, 2)
