@@ -1,4 +1,4 @@
-"""
+﻿"""
 SleepWatch: Sleep Disorders in the Context of Stress, Anxiety and Conflict
 MSBA 382 - Healthcare Analytics | Individual Project
 AUB Olayan School of Business, Summer 2026
@@ -86,7 +86,7 @@ section[data-testid="stSidebar"] {
 """, unsafe_allow_html=True)
 
 
-# ── Password gate ──────────────────────────────────────────────────────────────
+# â”€â”€ Password gate â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def check_password():
     if st.session_state.get("authenticated"):
         return True
@@ -119,7 +119,7 @@ if not check_password():
     st.stop()
 
 
-# ── Data ───────────────────────────────────────────────────────────────────────
+# â”€â”€ Data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 @st.cache_data(show_spinner="Loading data…")
 def load_data():
     p = pd.read_csv("data/patient_data.csv")
@@ -166,7 +166,7 @@ FEAT_LABELS = ["Age", "Gender", "BMI", "Stress", "Anxiety (GAD-7)",
                "Job Stress", "Smoking", "Alcohol", "Chronic Pain"]
 
 
-# ── Sidebar ────────────────────────────────────────────────────────────────────
+# â”€â”€ Sidebar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 with st.sidebar:
     st.markdown("""
     <div style='padding:0.6rem 0 0.2rem; text-align:center;'>
@@ -195,7 +195,7 @@ with st.sidebar:
     st.caption("WHO GHO · IHME GBD · DASS-42 · Kaggle · Hallit 2020 · BMC 2025")
 
 
-# ── Filter helper ──────────────────────────────────────────────────────────────
+# â”€â”€ Filter helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def apply_filters(df):
     m = (df["Gender"].isin(gender_filter) &
          df["Age"].between(*age_range) &
@@ -215,9 +215,9 @@ def polish(fig):
     return fig
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE 1 — PATIENT OVERVIEW
-# ══════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# PAGE 1 "” PATIENT OVERVIEW
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 if page == "Patient Overview":
 
     st.markdown("## Patient Overview")
@@ -233,7 +233,7 @@ if page == "Patient Overview":
     </div>
     """, unsafe_allow_html=True)
 
-    # ── KPIs row 1 ───────────────────────────────────────────────────────────
+    # â”€â”€ KPIs row 1 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     c1, c2, c3 = st.columns(3)
     with c1:
         st.metric("Disorder Prevalence",
@@ -242,7 +242,7 @@ if page == "Patient Overview":
     with c2:
         st.metric("Avg Stress Score",
                   f"{df['Stress_Score'].mean():.1f} / 10",
-                  "self-reported, 1–10 scale")
+                  "self-reported, 1"“10 scale")
     with c3:
         st.metric("Avg Anxiety (GAD-7)",
                   f"{df['Anxiety_Score'].mean():.1f} / 21",
@@ -250,7 +250,7 @@ if page == "Patient Overview":
 
     st.markdown("<div style='margin-top:0.8rem'></div>", unsafe_allow_html=True)
 
-    # ── KPIs row 2 ───────────────────────────────────────────────────────────
+    # â”€â”€ KPIs row 2 â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     c4, c5, c6 = st.columns(3)
     with c4:
         st.metric("Avg Sleep Duration",
@@ -267,7 +267,7 @@ if page == "Patient Overview":
 
     st.markdown("<div style='margin-top:0.4rem'></div>", unsafe_allow_html=True)
 
-    # ── Chart row 1: donut | stress bar | conflict lollipop ───────────────────
+    # â”€â”€ Chart row 1: donut | stress bar | conflict lollipop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     col1, col2, col3 = st.columns([1, 1.1, 1.1])
 
     with col1:
@@ -289,7 +289,7 @@ if page == "Patient Overview":
         st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Stress levels by disorder</span>", unsafe_allow_html=True)
         fig2 = px.box(df, x="Sleep_Disorder", y="Stress_Score",
                       color="Sleep_Disorder", color_discrete_map=PALETTE,
-                      labels={"Sleep_Disorder": "", "Stress_Score": "Stress (1–10)"})
+                      labels={"Sleep_Disorder": "", "Stress_Score": "Stress (1"“10)"})
         polish(fig2)
         fig2.update_layout(showlegend=False, xaxis_tickangle=-20, height=230,
                            margin=dict(t=4, b=36, l=8, r=8))
@@ -318,67 +318,85 @@ if page == "Patient Overview":
                            yaxis=dict(tickfont=dict(size=10)))
         st.plotly_chart(fig3, use_container_width=True)
 
-    # ── Sleep duration + Anxiety side by side ────────────────────────────────
-    sl_col, anx_col = st.columns(2)
+    # â”€â”€ Scatter (stress vs sleep) + Heatmap â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    sc_col, hm_col = st.columns(2)
 
-    with sl_col:
-        st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Avg sleep duration by disorder</span>", unsafe_allow_html=True)
-        sleep_agg = (df.groupby("Sleep_Disorder")["Sleep_Duration_Hrs"]
-                     .mean().reset_index()
-                     .rename(columns={"Sleep_Duration_Hrs": "Avg_Sleep"})
-                     .sort_values("Avg_Sleep", ascending=True))
-        fig_sl = px.bar(sleep_agg, x="Avg_Sleep", y="Sleep_Disorder", orientation="h",
-                        color="Sleep_Disorder", color_discrete_map=PALETTE,
-                        labels={"Avg_Sleep": "Avg hours / night", "Sleep_Disorder": ""},
-                        text="Avg_Sleep")
-        fig_sl.update_traces(texttemplate="%{x:.1f} hrs", textposition="inside",
-                             showlegend=False)
-        fig_sl.update_layout(
-            **{**BASE, "margin": dict(t=4, b=28, l=130, r=20)},
-            height=230,
-            xaxis=dict(title="Avg hours / night", range=[0, 10],
-                       showgrid=True, gridcolor="#F3F4F6", tickfont=dict(size=10)),
+    with sc_col:
+        st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Stress level vs sleep duration by disorder</span>", unsafe_allow_html=True)
+        samp = df.sample(min(1500, len(df)), random_state=42)
+        fig_sc2 = px.scatter(
+            samp, x="Stress_Score", y="Sleep_Duration_Hrs",
+            color="Sleep_Disorder", color_discrete_map=PALETTE,
+            opacity=0.45,
+            labels={"Stress_Score": "Stress (1-10)",
+                    "Sleep_Duration_Hrs": "Sleep hrs / night",
+                    "Sleep_Disorder": ""}
+        )
+        fig_sc2.update_traces(marker=dict(size=5))
+        polish(fig_sc2)
+        fig_sc2.update_layout(
+            height=240,
+            margin=dict(t=4, b=50, l=8, r=8),
+            legend=dict(orientation="h", y=-0.30, font=dict(size=9))
+        )
+        st.plotly_chart(fig_sc2, use_container_width=True)
+
+    with hm_col:
+        st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Disorder profile heatmap (relative severity)</span>", unsafe_allow_html=True)
+        heat_raw = df.groupby("Sleep_Disorder").agg(
+            Stress    =("Stress_Score",       "mean"),
+            Anxiety   =("Anxiety_Score",      "mean"),
+            BMI       =("BMI",                "mean"),
+            Conflict  =("Conflict_Exposed",   lambda x: x.mean() * 100),
+            Caffeine  =("Caffeine_Daily_Cups","mean"),
+        ).round(1)
+        heat_norm = (heat_raw - heat_raw.min()) / (heat_raw.max() - heat_raw.min() + 1e-9)
+        text_grid = []
+        for metric in heat_raw.columns:
+            row = []
+            for dis in heat_raw.index:
+                v = heat_raw.loc[dis, metric]
+                row.append(f"{v:.0f}%" if metric == "Conflict" else f"{v:.1f}")
+            text_grid.append(row)
+        fig_hm = px.imshow(
+            heat_norm.T.values,
+            x=heat_raw.index.tolist(),
+            y=heat_raw.columns.tolist(),
+            color_continuous_scale="RdYlGn_r",
+            aspect="auto",
+            labels={"color": "Relative level"}
+        )
+        fig_hm.update_traces(
+            text=text_grid,
+            texttemplate="%{text}",
+            textfont=dict(size=10, color="white")
+        )
+        polish(fig_hm)
+        fig_hm.update_layout(
+            height=240,
+            margin=dict(t=4, b=4, l=70, r=10),
+            coloraxis_showscale=False,
+            xaxis=dict(tickfont=dict(size=9), tickangle=-18),
             yaxis=dict(tickfont=dict(size=10))
         )
-        st.plotly_chart(fig_sl, use_container_width=True)
-
-    with anx_col:
-        st.markdown("<span style='font-size:0.82rem;font-weight:600;color:#374151;'>Avg anxiety score (GAD-7) by disorder</span>", unsafe_allow_html=True)
-        anx_agg = (df.groupby("Sleep_Disorder")["Anxiety_Score"]
-                   .mean().reset_index()
-                   .rename(columns={"Anxiety_Score": "Avg_Anxiety"})
-                   .sort_values("Avg_Anxiety", ascending=True))
-        fig_anx = px.bar(anx_agg, x="Avg_Anxiety", y="Sleep_Disorder", orientation="h",
-                         color="Sleep_Disorder", color_discrete_map=PALETTE,
-                         labels={"Avg_Anxiety": "GAD-7 score (0–21)", "Sleep_Disorder": ""},
-                         text="Avg_Anxiety")
-        fig_anx.update_traces(texttemplate="%{x:.1f}", textposition="inside",
-                              showlegend=False)
-        fig_anx.update_layout(
-            **{**BASE, "margin": dict(t=4, b=28, l=130, r=20)},
-            height=230,
-            xaxis=dict(title="GAD-7 score (0–21)", range=[0, 22],
-                       showgrid=True, gridcolor="#F3F4F6", tickfont=dict(size=10)),
-            yaxis=dict(tickfont=dict(size=10))
-        )
-        st.plotly_chart(fig_anx, use_container_width=True)
+        st.plotly_chart(fig_hm, use_container_width=True)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE 2 — GLOBAL BURDEN
-# ══════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# PAGE 2 "” GLOBAL BURDEN
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elif page == "Global Burden":
 
     st.markdown("## Global Burden of Sleep Disorders")
     st.markdown("""
     <div class='callout'>
     Conflict-affected countries consistently rank at the top. Lebanon's sleep disorder prevalence
-    has climbed from roughly 38% in 2018 to over 55% in 2026 — a direct reflection of compounding
+    has climbed from roughly 38% in 2018 to over 55% in 2026 "” a direct reflection of compounding
     crises: economic collapse, the Beirut port explosion, and two successive wars.
     </div>
     """, unsafe_allow_html=True)
 
-    # ── KPIs ─────────────────────────────────────────────────────────────────
+    # â”€â”€ KPIs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     lbn_now  = trend[trend["Year"] == 2026]["Lebanon_Prevalence"].values[0]
     lbn_base = trend[trend["Year"] == 2018]["Lebanon_Prevalence"].values[0]
     pal_prev = country[country["Country"] == "Palestine"]["Any_Sleep_Disorder_Pct"].values[0]
@@ -399,8 +417,8 @@ elif page == "Global Burden":
 
     st.markdown("---")
 
-    # ── Trend chart ───────────────────────────────────────────────────────────
-    st.markdown("**How Lebanon's sleep disorder rate compares over time (2000–2026)**")
+    # â”€â”€ Trend chart â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    st.markdown("**How Lebanon's sleep disorder rate compares over time (2000"“2026)**")
 
     TREND_COLORS = {
         "Global_Prevalence":      "#CBD5E1",
@@ -444,7 +462,7 @@ elif page == "Global Burden":
     )
     st.plotly_chart(fig_t, use_container_width=True)
 
-    # ── Map + Top 15 side by side ─────────────────────────────────────────────
+    # â”€â”€ Map + Top 15 side by side â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     map_col, bar_col = st.columns([1.6, 1.4])
 
     with map_col:
@@ -496,7 +514,7 @@ elif page == "Global Burden":
         )
         st.plotly_chart(fig_b, use_container_width=True)
 
-    # ── Scatter (conflict vs prevalence) ──────────────────────────────────────
+    # â”€â”€ Scatter (conflict vs prevalence) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     left, right = st.columns([1.5, 1.5])
 
     with left:
@@ -532,16 +550,16 @@ elif page == "Global Burden":
                "Research Square (2025) · Tandfonline (2025) | MSBA 382, AUB, Summer 2026")
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE 3 — RISK PREDICTOR
-# ══════════════════════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+# PAGE 3 "” RISK PREDICTOR
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 elif page == "Risk Predictor":
 
     st.markdown("## Predictive Risk Model")
     st.markdown("""
     <div class='callout'>
     <strong>Bonus component.</strong> An XGBoost classifier estimates individual sleep disorder risk.
-    SHAP values show exactly which inputs drive each prediction — making the model transparent
+    SHAP values show exactly which inputs drive each prediction "” making the model transparent
     and clinically interpretable.
     </div>
     """, unsafe_allow_html=True)
@@ -557,8 +575,8 @@ elif page == "Risk Predictor":
             age_in     = st.slider("Age", 18, 80, 32)
             gender_in  = st.selectbox("Gender", ["Male", "Female"])
             bmi_in     = st.slider("BMI", 16.0, 50.0, 25.0, 0.5)
-            stress_in  = st.slider("Stress (1–10)", 1, 10, 5)
-            anxiety_in = st.slider("Anxiety / GAD-7 (0–21)", 0, 21, 7)
+            stress_in  = st.slider("Stress (1"“10)", 1, 10, 5)
+            anxiety_in = st.slider("Anxiety / GAD-7 (0"“21)", 0, 21, 7)
         with c2:
             sleep_in    = st.slider("Avg sleep (hrs)", 2.0, 10.0, 7.0, 0.5)
             caffeine_in = st.slider("Caffeine (cups/day)", 0, 6, 2)
@@ -693,3 +711,4 @@ elif page == "Risk Predictor":
             polish(fig_i)
             fig_i.update_layout(coloraxis_showscale=False)
             st.plotly_chart(fig_i, use_container_width=True)
+
