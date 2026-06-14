@@ -38,45 +38,45 @@ chronic    = RNG.binomial(1, 0.18, N)
 
 # ── 2. Logistic risk formula  (clinically sensible coefficients) ──────────────
 #
-# Intercept = -1.70 so the DEFAULT app profile (stress=5, anxiety=7, sleep=7,
+# Intercept = -2.75 so the DEFAULT app profile (stress=5, anxiety=7, sleep=7,
 # pa=Moderate, occ=Low, no conflict/smoking/alcohol/pain, bmi=25, age=32)
-# produces ~20% risk → "Low Risk" starting point.
+# produces ~20% risk -> "Low Risk" starting point.
 #
 # Full-range contribution of each feature:
-#   stress    1→10 : +2.00  (biggest driver along with anxiety)
-#   anxiety   0→21 : +1.80
-#   sleep    10→2  : +1.80  (protective when HIGH, harmful when LOW)
-#   conflict  0→1  : +0.80
-#   occ_stress L→H : +0.60  (clearly visible Low vs High job stress effect)
-#   bmi      25→50 : +0.40  (only above 25)
-#   smoking   0→1  : +0.40
-#   chronic   0→1  : +0.40
-#   pa        3→0  : +0.40  (protective when HIGH)
-#   caffeine  0→6  : +0.25
-#   screen    0→12 : +0.15
-#   alcohol   0→1  : +0.15
-#   age      35→80 : +0.12
-#   gender    F→M  : +0.08
+#   stress    1->10 : +3.50  (biggest driver along with anxiety)
+#   anxiety   0->21 : +3.00
+#   sleep    10->2  : +3.00  (protective when HIGH, harmful when LOW)
+#   conflict  0->1  : +1.40
+#   occ_stress L->H : +1.00  (clearly visible Low vs High job stress effect)
+#   bmi      25->50 : +0.70  (only above 25)
+#   smoking   0->1  : +0.70
+#   chronic   0->1  : +0.70
+#   pa        3->0  : +0.70  (protective when HIGH)
+#   caffeine  0->6  : +0.40
+#   screen    0->12 : +0.25
+#   alcohol   0->1  : +0.25
+#   age      35->80 : +0.20
+#   gender    F->M  : +0.14
 #
-# Total positive range ≈ 7.35  → max logit ≈ -1.70 + 7.35 = +5.65 → p≈99%
-# Total protective range ≈ -2.20 → min logit ≈ -1.70 - 2.20 = -3.90 → p≈2%
+# Total positive range ≈ 13.24 -> max logit ≈ -2.75 + 13.24 = +10.49 -> p≈99%
+# Total protective range ≈ -3.70 -> min logit ≈ -2.75 - 3.70 = -6.45 -> p≈0.2%
 
 logit = (
-    -1.70                                          # intercept
-    + 2.00 * (stress  - 1) / 9.0                  # stress    1→10  adds  0 to +2.00
-    + 1.80 * anxiety / 21.0                        # anxiety   0→21  adds  0 to +1.80
-    - 1.80 * (sleep_dur - 2.0) / 8.0              # sleep    10→2   adds -1.80 to  0
-    + 0.80 * conflict                              # conflict  0/1
-    + 0.60 * occ_enc / 2.0                        # job stress 0→2  adds  0 to +0.60
-    + 0.40 * np.maximum(0, bmi - 25.0) / 25.0     # BMI above 25    adds  0 to +0.40
-    + 0.40 * smoking                               # smoking   0/1
-    + 0.40 * chronic                               # chronic pain 0/1
-    - 0.40 * pa_enc / 3.0                         # physical act 3→0 adds -0.40 to  0
-    + 0.25 * caffeine / 6.0                        # caffeine  0→6   adds  0 to +0.25
-    + 0.15 * screen / 12.0                         # screen    0→12  adds  0 to +0.15
-    + 0.15 * alcohol                               # alcohol   0/1
-    + 0.12 * np.maximum(0, age - 35) / 45.0        # age above 35    adds  0 to +0.12
-    + 0.08 * gender_enc                            # gender (male slight OSA risk)
+    -2.75                                          # intercept
+    + 3.50 * (stress  - 1) / 9.0                  # stress    1->10  adds  0 to +3.50
+    + 3.00 * anxiety / 21.0                        # anxiety   0->21  adds  0 to +3.00
+    - 3.00 * (sleep_dur - 2.0) / 8.0              # sleep    10->2   adds -3.00 to  0
+    + 1.40 * conflict                              # conflict  0/1
+    + 1.00 * occ_enc / 2.0                        # job stress 0->2  adds  0 to +1.00
+    + 0.70 * np.maximum(0, bmi - 25.0) / 25.0     # BMI above 25    adds  0 to +0.70
+    + 0.70 * smoking                               # smoking   0/1
+    + 0.70 * chronic                               # chronic pain 0/1
+    - 0.70 * pa_enc / 3.0                         # physical act 3->0 adds -0.70 to  0
+    + 0.40 * caffeine / 6.0                        # caffeine  0->6   adds  0 to +0.40
+    + 0.25 * screen / 12.0                         # screen    0->12  adds  0 to +0.25
+    + 0.25 * alcohol                               # alcohol   0/1
+    + 0.20 * np.maximum(0, age - 35) / 45.0        # age above 35    adds  0 to +0.20
+    + 0.14 * gender_enc                            # gender (male slight OSA risk)
 )
 
 p_true = 1.0 / (1.0 + np.exp(-logit))
@@ -118,12 +118,12 @@ Xtr, Xte, ytr, yte = train_test_split(
 # ── 4. Train XGBoost (smooth settings prevent sharp decision boundaries) ──────
 model = xgb.XGBClassifier(
     n_estimators    = 500,
-    max_depth       = 3,       # shallow trees → smoother surface
-    learning_rate   = 0.02,    # many small steps → gradual boundaries
-    subsample       = 0.70,    # row sampling → less overfitting
-    colsample_bytree= 0.70,    # feature sampling → diverse trees
-    min_child_weight= 20,      # min samples per leaf → no tiny sharp splits
-    gamma           = 1.0,     # min gain to split → conservative splits
+    max_depth       = 3,       # shallow trees -> smoother surface
+    learning_rate   = 0.02,    # many small steps -> gradual boundaries
+    subsample       = 0.70,    # row sampling -> less overfitting
+    colsample_bytree= 0.70,    # feature sampling -> diverse trees
+    min_child_weight= 20,      # min samples per leaf -> no tiny sharp splits
+    gamma           = 1.0,     # min gain to split -> conservative splits
     reg_alpha       = 0.1,     # L1 regularisation
     reg_lambda      = 2.0,     # L2 regularisation
     eval_metric     = "logloss",
@@ -153,15 +153,15 @@ print("\n-- Sanity checks (direction & magnitude) --")
 print(f"  Default profile (should be Low Risk ~15-25%):  {predict(base):.1f}%")
 
 for label, changes in [
-    ("Stress 5→10",             {"Stress_Score": 10}),
-    ("Stress 5→1",              {"Stress_Score": 1}),
-    ("Anxiety 7→20",            {"Anxiety_Score": 20}),
-    ("Sleep 7→5 hrs",           {"Sleep_Duration_Hrs": 5.0}),
-    ("Sleep 7→9 hrs",           {"Sleep_Duration_Hrs": 9.0}),
-    ("Sleep 7→6.5 (0.5 drop)",  {"Sleep_Duration_Hrs": 6.5}),
+    ("Stress 5->10",             {"Stress_Score": 10}),
+    ("Stress 5->1",              {"Stress_Score": 1}),
+    ("Anxiety 7->20",            {"Anxiety_Score": 20}),
+    ("Sleep 7->5 hrs",           {"Sleep_Duration_Hrs": 5.0}),
+    ("Sleep 7->9 hrs",           {"Sleep_Duration_Hrs": 9.0}),
+    ("Sleep 7->6.5 (0.5 drop)",  {"Sleep_Duration_Hrs": 6.5}),
     ("Conflict YES",            {"Conflict_Exposed": 1}),
-    ("Job stress Low→High",     {"Occ_enc": 2}),
-    ("Job stress Low→Medium",   {"Occ_enc": 1}),
+    ("Job stress Low->High",     {"Occ_enc": 2}),
+    ("Job stress Low->Medium",   {"Occ_enc": 1}),
     ("Smoking YES",             {"Smoking": 1}),
     ("Chronic pain YES",        {"Chronic_Pain": 1}),
     ("PA None (was Moderate)",  {"PA_enc": 0}),

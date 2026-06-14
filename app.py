@@ -618,26 +618,26 @@ elif page == "Risk Predictor":
 
         # ── Logistic risk formula ──────────────────────────────────────────────
         # Intercept set so the default profile (stress=5, anxiety=7, sleep=7 hrs,
-        # no conflict/smoking/alcohol/pain, pa=Moderate, occ=Low) starts at ~25%.
+        # no conflict/smoking/alcohol/pain, pa=Moderate, occ=Low) starts at ~20%.
         # Each coefficient is the maximum log-odds contribution of that feature
         # over its full range. Sign is clinically correct.
-        _INTERCEPT = -1.23
+        _INTERCEPT = -1.60
 
         contrib = {
-            "Stress":            0.50 * (stress_in  - 5)   / 5,     # 1→10 range ±0.50
-            "Anxiety (GAD-7)":   0.50 * (anxiety_in - 7)   / 14,    # 0→21 range ±0.25/+0.50
-            "Sleep Duration":    0.60 * (7.0 - sleep_in)   / 3,     # 10hrs→-0.60, 2hrs→+1.0
-            "Conflict Exposed":  0.50 * _conflict,
-            "Job Stress":        0.40 * _occ                / 2,     # Low→0, High→+0.40
-            "Chronic Pain":      0.25 * _chronic,
-            "Smoking":           0.25 * _smoking,
-            "BMI":               0.30 * max(0, bmi_in - 25) / 10,   # above 25 only
-            "Physical Activity": 0.20 * (2 - _pa)           / 2,    # Moderate→0, None→+0.20
-            "Alcohol":           0.12 * _alcohol,
-            "Caffeine":          0.08 * caffeine_in          / 4,
-            "Screen Time":       0.06 * screen_in            / 6,
-            "Age":               0.10 * max(0, age_in - 40)  / 20,  # above 40 only
-            "Gender":            0.05 * _gender,
+            "Stress":            1.00 * (stress_in  - 5)   / 5,     # 1→10 range ±1.00
+            "Anxiety (GAD-7)":   0.80 * (anxiety_in - 7)   / 14,    # 0→21 range
+            "Sleep Duration":    0.95 * (7.0 - sleep_in)   / 3,     # 10hrs→-0.95, 2hrs→+1.58
+            "Conflict Exposed":  0.95 * _conflict,
+            "Job Stress":        0.75 * _occ                / 2,     # Low→0, High→+0.75
+            "Chronic Pain":      0.40 * _chronic,
+            "Smoking":           0.40 * _smoking,
+            "BMI":               0.50 * max(0, bmi_in - 25) / 10,   # above 25 only
+            "Physical Activity": 0.32 * (2 - _pa)           / 2,    # Moderate→0, None→+0.32
+            "Alcohol":           0.20 * _alcohol,
+            "Caffeine":          0.13 * caffeine_in          / 4,
+            "Screen Time":       0.10 * screen_in            / 6,
+            "Age":               0.45 * (age_in - 18)        / 62,  # 18→80 full range
+            "Gender (Female)":   0.08 * (1 - _gender),              # female=higher risk
         }
 
         logit        = _INTERCEPT + sum(contrib.values())
@@ -683,7 +683,7 @@ elif page == "Risk Predictor":
                 xaxis=dict(range=[-max_abs, max_abs], zeroline=False)
             )
             st.caption("Red = increases risk · Blue = reduces risk · Bar length = strength of effect")
-            st.plotly_chart(fig_sh, use_container_width=True)
+            st.plotly_chart(fig_sh, use_container_width=True, key="risk_contrib_chart")
 
     with tab2:
         y_pred = model.predict(X_test)
@@ -705,7 +705,7 @@ elif page == "Risk Predictor":
                                x=["No Disorder", "Has Disorder"],
                                y=["No Disorder", "Has Disorder"])
             polish(fig_cm)
-            st.plotly_chart(fig_cm, use_container_width=True)
+            st.plotly_chart(fig_cm, use_container_width=True, key="perf_cm")
 
         with m2:
             st.markdown("**ROC curve**")
@@ -720,7 +720,7 @@ elif page == "Risk Predictor":
             fig_roc.update_layout(**BASE, xaxis_title="False positive rate",
                                   yaxis_title="True positive rate",
                                   legend=dict(x=0.55, y=0.08))
-            st.plotly_chart(fig_roc, use_container_width=True)
+            st.plotly_chart(fig_roc, use_container_width=True, key="perf_roc")
 
         with m3:
             st.markdown("**Global feature importance**")
@@ -731,5 +731,5 @@ elif page == "Risk Predictor":
                            color="Importance", color_continuous_scale="Blues")
             polish(fig_i)
             fig_i.update_layout(coloraxis_showscale=False)
-            st.plotly_chart(fig_i, use_container_width=True)
+            st.plotly_chart(fig_i, use_container_width=True, key="perf_feat_imp")
 
