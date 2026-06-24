@@ -103,6 +103,7 @@ def check_password():
         st.markdown("""
         <div style='text-align:center; padding:2.2rem 2rem 1.8rem;
                     background:#FAFAF8; border-radius:16px; border:1px solid #E8E3DA;'>
+            <svg xmlns="http://www.w3.org/2000/svg" width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#1B3A5C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:0.5rem;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             <div style='font-size:1.5rem; font-weight:600; color:#1B3A5C; margin:0 0 0;'>SleepWatch</div>
             <div style='color:#8C8680; font-size:0.84rem; margin:0.1rem 0 1.4rem;'>
                 Clinical Sleep Analytics &nbsp;·&nbsp; AUB
@@ -172,6 +173,7 @@ FEAT_LABELS = ["Age", "Gender", "BMI", "Stress", "Anxiety (GAD-7)",
 with st.sidebar:
     st.markdown("""
     <div style='padding:0.6rem 0 0.2rem; text-align:center;'>
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1B3A5C" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
         <div style='font-size:1rem; font-weight:600; color:#1B3A5C; margin-top:0.2rem;'>SleepWatch</div>
         <div style='font-size:0.68rem; color:#A8A29E; margin-top:0.1rem;'>
             Clinical Sleep Analytics · AUB
