@@ -306,7 +306,7 @@ def occ_stress(occ):
     elif occ in MED_OCC:
         return 'Medium'
     return 'Low'
-d2['Occupation_Stress'] = kag_raw['Occupation'].map(occ_stress)
+d2['Occupation_Stress'] = assign_occ_stress(d2['Stress_Score'].values, rng2)
 
 d2['Caffeine_Daily_Cups'] = assign_caffeine(d2['Stress_Score'].values, rng2)
 
