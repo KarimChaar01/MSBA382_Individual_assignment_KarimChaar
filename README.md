@@ -35,7 +35,7 @@ SleepWatch is an interactive analytics dashboard examining sleep disorders in th
 |--------|---------|-------------|
 | DASS-42 OpenPsychometrics | ~8,027 | Global self-reported stress, anxiety, and depression survey |
 | Kaggle Sleep Health & Lifestyle | 374 | Clinical sleep and lifestyle variables |
-| Lebanon/MENA clinical data | ~5,000 | Calibrated to Hallit et al. (2020) and BMC Public Health (2025) |
+| Lebanon/MENA clinical data | aprox. 5,000 | Calibrated to Hallit et al. (2020) and BMC Public Health (2025) |
 | **Total** | **13,401** | Merged patient dataset |
 
 Global prevalence data sourced from WHO GHO, IHME GBD, and peer-reviewed literature (2018-2026).
